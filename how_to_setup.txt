@@ -1,0 +1,46 @@
+OpenOCD:
+
+$ sudo apt-get install git
+$ sudo apt-get install libtool autoconf
+$ sudo apt-get install texinfo
+$ sudo apt-get install libusb-1.0-0-dev
+$ git clone http://repo.or.cz/r/openocd.git openocd
+$ ./bootstrap 
+$ ./configure --enable-stlink
+$ make -j2
+$ grep 374b contrib/99-openocd.rules > 99-stlink.rules
+$ cat 99-stlink.rules 
+$ sudo cp 99-stlink.rules /etc/udev/rules.d/
+$ sudo service udev restart
+$ cd tcl
+$ ../src/openocd -f board/st_nucleo_f3.cfg 
+
+GCC ARM:
+
+download 'gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2'
+  from : https://launchpad.net/gcc-arm-embedded
+
+$ tar jxf downloads/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 
+$ mv gcc-arm-none-eabi-5_4-2016q3 gcc-arm
+
+
+download 'jre-8u112-linux-x64.tar.gz'
+  from : http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html
+
+$ sudo mkdir -p /usr/lib/jvm
+$ sudo tar zxf jre-8u112-linux-x64.tar.gz -C /usr/lib/jvm
+$ sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jre1.8.0_112/bin/java" 1
+$ sudo update-alternatives --set java /usr/lib/jvm/jre1.8.0_112/bin/java
+
+JREをインストール後、JAVA_HOMEをユーザーのプロファイルに設定します。
+shellまたはbashの場合：
+
+$vi .bashrc
+
+export JAVA_HOME=/usr/lib/jvm/jre1.8.0_112
+
+i386 Run-Time Library
+$ sudo dpkg --add-architecture i386
+$ sudo apt-get update
+$ sudo apt-get install libc6:i386 libncurses5:i386 libstdc++6:i386
+

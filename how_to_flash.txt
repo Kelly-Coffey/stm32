@@ -1,0 +1,17 @@
+OpenOCDの起動
+
+$ cd openocd/tcl
+$ ../src/openocd -f board/st_nucleo_f3.cfg
+
+gdbでopenOCDに接続し、ROM Flash
+
+$ ~/gcc-arm/bin/arm-none-eabi-gdb xxxx.elf
+$ target extended localhost:3333
+$ monitor reset init
+$ flash
+$ monitor reset
+
+一発書き込み
+
+~/openocd/src/openocd -s ~/openocd/tcl -f board/st_nucleo_f3.cfg -c "program nucleof303k8_led.elf verify reset exit"
+
