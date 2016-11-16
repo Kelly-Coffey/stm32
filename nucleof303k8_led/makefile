@@ -9,7 +9,6 @@ SZ=$(DIR)/arm-none-eabi-size
 
 OPENOCD=~/openocd
 BOARDCNF=st_nucleo_f3.cfg
-PROGCMD = "program $(PROJECT).elf verify reset exit"
 
 DEFS = -DUSE_HAL_DRIVER -DSTM32F303x8
 
@@ -96,9 +95,8 @@ $(AOBJ) : %.o : %.s
 
 clean:
 	@echo
-	find . -name '*.o' -print | xargs rm
-	rm $(PROJECT).elf $(PROJECT).hex $(PROJECT).lst $(PROJECT).sym
+	find . -name '*.o' -print -or -name '*.d' -print | xargs rm -f
+	rm -f $(PROJECT).elf $(PROJECT).hex $(PROJECT).lst $(PROJECT).sym
 
-flash: %.elf
-	$(OPENOCD)/src/openocd -s $(OPENOCD)/tcl -f board/$(BOARDCNF) -c $(PROGCMD)
-
+flash: $(PROJECT).elf
+	$(OPENOCD)/src/openocd -s $(OPENOCD)/tcl -f board/$(BOARDCNF) -c "program $^ verify reset exit"
