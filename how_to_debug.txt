@@ -1,0 +1,24 @@
+□ ソフトウェアブレイクポイント
+  以下の行を挿入する。
+    asm("bkpt #0");
+  この行に到達すると、ソフトウェアブレイクが発生する。
+  ただし、gdbを接続していないと、この行の場所でスタックするので注意。
+
+□arm semihosting メッセージ出力
+  以下の行を記述する。
+    char msg[] = "message...\n";
+    asm volatile (
+        " mov r0, 0x04 \n"
+        " mov r1, %[msg] \n"
+        " bkpt #0xAB"
+        :
+        : [msg] "r" (msg)
+        : "r0", "r1"
+    );
+
+    gdbにて、arm semihostingを有効にする
+    (gdb) monitor arm semihosting enable
+
+    参考: r0に設定する arm semihostingのオペコード
+        SYS_WRITE0 0x04
+
