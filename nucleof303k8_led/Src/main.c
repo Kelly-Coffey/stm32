@@ -85,6 +85,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    char msg[] = "Hello STM\n";
+    asm volatile (
+        " mov r0, 0x04 \n"
+        " mov r1, %[msg] \n"
+        " bkpt #0xAB"
+        :
+        : [msg] "r" (msg)
+        : "r0", "r1"
+    );
     HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
     HAL_Delay(200);
     HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
