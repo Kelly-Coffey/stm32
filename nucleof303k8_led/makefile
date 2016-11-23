@@ -24,6 +24,7 @@ MCFLAGS += -mthumb-interwork
 MCFLAGS += -fmessage-length=0
 MCFLAGS += -ffreestanding
 MCFLAGS += -fno-move-loop-invariants
+MCFLAGS += -Wl,--gc-sections
 
 STM32_INCLUDES = \
 	-IInc \
