@@ -27,6 +27,9 @@ $ mv gcc-arm-none-eabi-5_4-2016q3 gcc-arm
 download 'jre-8u112-linux-x64.tar.gz'
   from : http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html
 
+(tips: http://docs.datastax.com/ja/cassandra-jajp/2.0/cassandra/install/installJreDeb.html
+       DebianまたはUbuntuシステムでのOracle JREのインストール)
+
 $ sudo mkdir -p /usr/lib/jvm
 $ sudo tar zxf jre-8u112-linux-x64.tar.gz -C /usr/lib/jvm
 $ sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jre1.8.0_112/bin/java" 1
