@@ -106,6 +106,7 @@ BYTE xchg_spi (
 {
   BYTE rcv;
   HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(&dat), (uint8_t *)(&rcv), 1, 5000);
+  return rcv;
 }
 
 
@@ -116,7 +117,19 @@ void rcvr_spi_multi (
 	UINT btr		/* Number of bytes to receive (even number) */
 )
 {
-  HAL_SPI_Receive(&hspi1, (uint8_t *)buff, (uint16_t)(btr), 5000);
+  char dmy[32];
+  for (int i=0; i<32; ++i) {
+    dmy[i] = 0xff;
+  }
+  
+  while (btr >= 32) {
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(dmy), (uint8_t *)(buff), 32, 5000);
+    btr -= 32;
+    buff += 32;
+  }
+  if (btr) {
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(dmy), (uint8_t *)(buff), btr, 5000);
+  }
 }
 
 

@@ -52,8 +52,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 const char *INITMSG = "ST-Link UART V-Com output\r\n";
-const char *MOUNTOKMSG = "fatfs mount OK\r\n";
-const char *MOUNTNGMSG = "fatfs mount FAILED\r\n";
+const char *OPENDIROKMSG = "fatfs opendir OK\r\n";
+const char *OPENDIRNGMSG = "fatfs opendir FAILED\r\n";
+const char *FILENAMEMSG = "fatfs readdir : ";
 
 /* USER CODE END PV */
 
@@ -81,6 +82,9 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   FATFS fs;
+  DIR dir;
+  FRESULT fres;
+  FILINFO finf;
   
   /* USER CODE END 1 */
 
@@ -101,11 +105,25 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit(&huart2, (uint8_t*)INITMSG, strlen(INITMSG), 5000);
-
-  if (f_mount(&fs, "", 0) == FR_OK) {
-    HAL_UART_Transmit(&huart2, (uint8_t*)MOUNTOKMSG, strlen(MOUNTOKMSG), 5000);
+  
+  f_mount(&fs, "", 0);
+  fres = f_opendir(&dir, "0:");
+  if (fres == FR_OK) {
+    HAL_UART_Transmit(&huart2, (uint8_t*)OPENDIROKMSG, strlen(OPENDIROKMSG), 5000);
   } else {
-    HAL_UART_Transmit(&huart2, (uint8_t*)MOUNTNGMSG, strlen(MOUNTNGMSG), 5000);
+    HAL_UART_Transmit(&huart2, (uint8_t*)OPENDIRNGMSG, strlen(OPENDIRNGMSG), 5000);
+  }
+  
+  while (fres == FR_OK) {
+    char *fn;
+    fres = f_readdir(&dir, &finf);
+    fn = finf.fname;
+    if (fres != FR_OK || fn[0] == '\0') { break; }
+    if (fn[0] == '.' || fn[0] == '_') { continue; }
+    
+    HAL_UART_Transmit(&huart2, (uint8_t*)FILENAMEMSG, strlen(FILENAMEMSG), 5000);
+    HAL_UART_Transmit(&huart2, fn, strlen(fn), 5000);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 5000);
   }
   
   /* USER CODE END 2 */
