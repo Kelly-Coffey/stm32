@@ -7,7 +7,7 @@ CP=$(DIR)/arm-none-eabi-objcopy
 OD=$(DIR)/arm-none-eabi-objdump
 SZ=$(DIR)/arm-none-eabi-size
 
-#NANOLIB = --specs=nano.specs
+NANOLIB = --specs=nano.specs
 
 OPENOCD=~/openocd
 BOARDCNF=st_nucleo_f3.cfg
