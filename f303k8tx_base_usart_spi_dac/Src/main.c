@@ -116,7 +116,7 @@ void Init_GPIO(void)
   GPIOA->BSRR = SPI_CS_Pin|AMP_EN_Pin;
 
   /*Configure GPIOB pin Output Level */
-  GPIOB->BSRR = LED3_Pin;
+  GPIOB->BRR = LED3_Pin;
 
   /*Configure GPIOA pins : SPI_CS_Pin AMP_EN_Pin */
   GPIO_InitStruct.Pin = SPI_CS_Pin|AMP_EN_Pin;
@@ -150,6 +150,10 @@ int main(void)
   Init_Peripherals();
   
   while (1) {
+    LED3_GPIO_Port->BSRR = LED3_Pin;
+    delay_ms(1000);
+    LED3_GPIO_Port->BRR = LED3_Pin;
+    delay_ms(1000);
   }
 }
 
