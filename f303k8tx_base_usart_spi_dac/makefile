@@ -7,6 +7,7 @@ CP=$(DIR)/arm-none-eabi-objcopy
 OD=$(DIR)/arm-none-eabi-objdump
 SZ=$(DIR)/arm-none-eabi-size
 
+# SEMIHOST_LIB = --specs=rdimon.specs -lrdimon
 NANOLIB = --specs=nano.specs
 
 OPENOCD=~/openocd
@@ -39,7 +40,7 @@ STM32_INCLUDES = \
 #OPTIMIZE = -Os
 OPTIMIZE = -gdwarf-2 -O0 -flto-partition=none -fipa-sra
 
-CFLAGS  = $(MCFLAGS) $(OPTIMIZE) $(NANOLIB) $(DEFS) $(STM32_INCLUDES)
+CFLAGS  = $(MCFLAGS) $(OPTIMIZE) $(NANOLIB) $(SEMIHOST_LIB) $(DEFS) $(STM32_INCLUDES)
 CFLAGS += -Wl,-T,STM32F303K8Tx_FLASH.ld
 AFLAGS  = $(MCFLAGS)
 
