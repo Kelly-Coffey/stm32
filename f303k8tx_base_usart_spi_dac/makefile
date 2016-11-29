@@ -7,7 +7,7 @@ CP=$(DIR)/arm-none-eabi-objcopy
 OD=$(DIR)/arm-none-eabi-objdump
 SZ=$(DIR)/arm-none-eabi-size
 
-#NANOLIB = --specs=nano.specs
+NANOLIB = --specs=nano.specs
 
 OPENOCD=~/openocd
 BOARDCNF=st_nucleo_f3.cfg
@@ -45,10 +45,11 @@ AFLAGS  = $(MCFLAGS)
 
 CSRC = \
 	Src/main.c \
+	Src/sysconf.c \
 	Src/stm32f3xx_it.c \
 	Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c \
-	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c \
-	Src/syscalls.c
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c
 
 ASRC = Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc/startup_stm32f303x8.s
 
