@@ -47,9 +47,12 @@ CSRC = \
 	Src/main.c \
 	Src/sysconf.c \
 	Src/stm32f3xx_it.c \
+	Src/uart2_dma.c \
 	Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c \
-	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c
 
 ASRC = Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc/startup_stm32f303x8.s
 
