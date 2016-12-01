@@ -47,6 +47,15 @@
 #define LED3_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
+#define GPIO_SET(port, pin)   (port ->BSRR = (uint32_t)pin)
+#define GPIO_RESET(port, pin) (port ->BRR = (uint32_t)pin)
+
+#define USD_CS_HIGH() GPIO_SET( ((GPIO_TypeDef*)USD_CS_GPIO_Port), USD_CS_Pin )
+#define USD_CS_LOW()  GPIO_RESET( ((GPIO_TypeDef*)USD_CS_GPIO_Port), USD_CS_Pin )
+
+#define LED3_ON()   GPIO_SET( ((GPIO_TypeDef*)LED3_GPIO_Port), LED3_Pin )
+#define LED3_OFF()  GPIO_RESET( ((GPIO_TypeDef*)LED3_GPIO_Port), LED3_Pin )
+
 /* USER CODE END Private defines */
 
 /**

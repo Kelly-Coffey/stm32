@@ -65,7 +65,7 @@ void MX_SPI1_Init_Slow(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -79,19 +79,20 @@ void MX_SPI1_Init_Slow(void)
 }
 
 /* Set SCLK = PCLK / 32 */
-#define FCLK_SLOW() 	{ SPI1->CR1 = (SPI1->CR1 & ~0x38) | SPI_BAUDRATEPRESCALER_32; }
+#define FCLK_SLOW() 	{ MODIFY_REG(SPI1->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_128); }
 
 /* Set SCLK = PCLK / 2 */
-#define FCLK_FAST() 	{ SPI1->CR1 = (SPI1->CR1 & ~0x38) | SPI_BAUDRATEPRESCALER_2; }
+#define FCLK_FAST() 	{ MODIFY_REG(SPI1->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_2); }
 
-#define CS_HIGH() { HAL_GPIO_WritePin(USD_CS_GPIO_Port, USD_CS_Pin, GPIO_PIN_SET); }
-#define CS_LOW() { HAL_GPIO_WritePin(USD_CS_GPIO_Port, USD_CS_Pin, GPIO_PIN_RESET); }
+#define CS_HIGH() { USD_CS_HIGH(); }
+#define CS_LOW() { USD_CS_LOW(); }
 
 /* Initialize MMC interface */
 static
 void init_spi (void)
 {
   MX_SPI1_Init_Slow();        /* Enable SPI function */
+  SPI1->CR1 |= SPI_CR1_SPE;
   CS_HIGH();                  /* Set CS# high */
   
   for (Timer1 = 10; Timer1; ) ;   /* 10ms */
@@ -104,9 +105,9 @@ BYTE xchg_spi (
 	BYTE dat	/* Data to send */
 )
 {
-  BYTE rcv;
-  HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(&dat), (uint8_t *)(&rcv), 1, 5000);
-  return rcv;
+  *(__IO uint8_t *)(&SPI1->DR) = dat;
+  while (! (SPI1->SR & SPI_SR_RXNE) );
+  return *(BYTE*)(&SPI1->DR);
 }
 
 
@@ -117,19 +118,32 @@ void rcvr_spi_multi (
 	UINT btr		/* Number of bytes to receive (even number) */
 )
 {
-  char dmy[32];
-  for (int i=0; i<32; ++i) {
-    dmy[i] = 0xff;
-  }
-  
-  while (btr >= 32) {
-    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(dmy), (uint8_t *)(buff), 32, 5000);
-    btr -= 32;
-    buff += 32;
-  }
-  if (btr) {
-    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)(dmy), (uint8_t *)(buff), btr, 5000);
-  }
+  WORD d;
+
+  /* Set SPI to 16-bit mode */
+  SPI1->CR1 &= ~SPI_CR1_SPE;
+  MODIFY_REG(SPI1->CR2, (SPI_CR2_DS | SPI_CR2_FRXTH), SPI_DATASIZE_16BIT | SPI_RXFIFO_THRESHOLD_HF);
+  SPI1->CR1 |= SPI_CR1_SPE;
+
+  SPI1->DR = 0xffff;
+  btr -= 2;
+  do {
+    while (! (SPI1->SR & SPI_SR_RXNE) );
+    d = SPI1->DR;
+    SPI1->DR = 0xffff;
+    buff[0] = (BYTE)(d>>8);
+    buff[1] = (BYTE)d;
+    buff += 2;
+  } while (btr -= 2);
+  while (! (SPI1->SR & SPI_SR_RXNE) );
+  d = SPI1->DR;
+  buff[0] = (BYTE)(d>>8);
+  buff[1] = (BYTE)d;
+
+  /* Set SPI to 8-bit mode */
+  SPI1->CR1 &= ~SPI_CR1_SPE;
+  MODIFY_REG(SPI1->CR2, (SPI_CR2_DS | SPI_CR2_FRXTH), SPI_DATASIZE_8BIT | SPI_RXFIFO_THRESHOLD_QF);
+  SPI1->CR1 |= SPI_CR1_SPE;
 }
 
 

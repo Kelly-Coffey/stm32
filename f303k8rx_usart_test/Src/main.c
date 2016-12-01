@@ -33,10 +33,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
+
+/* USER CODE BEGIN Includes */
 #include "ff.h"
 #include "string.h"
 
-/* USER CODE BEGIN Includes */
+void playwav(FIL* fp);
 
 /* USER CODE END Includes */
 
@@ -47,15 +49,25 @@ DAC_HandleTypeDef hdac1;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-const char *INITMSG = "ST-Link UART V-Com output\r\n";
-const char *OPENDIROKMSG = "fatfs opendir OK\r\n";
-const char *OPENDIRNGMSG = "fatfs opendir FAILED\r\n";
-const char *FILENAMEMSG = "fatfs readdir : ";
+const char INITMSG[] = "ST-Link UART V-Com output\r\n";
+const char OPENDIROKMSG[] = "fatfs opendir OK\r\n";
+const char OPENDIRNGMSG[] = "fatfs opendir FAILED\r\n";
+const char FILENAMEMSG[] = "fatfs readdir : ";
+const char PLAYMSG[] = "play \r\n";
 
+FATFS fs;
+DIR dir;
+FRESULT fres;
+FILINFO finf;
+
+char buff[32];
+char path[64] = "0:";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,7 +78,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_COMP4_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_SPI1_Init(void);
-
+static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -81,10 +93,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  FATFS fs;
-  DIR dir;
-  FRESULT fres;
-  FILINFO finf;
   
   /* USER CODE END 1 */
 
@@ -101,13 +109,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_COMP4_Init();
   MX_DAC1_Init();
-//  MX_SPI1_Init();
+/*  MX_SPI1_Init(); */
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_DeInit(&htim2);
+    
   HAL_UART_Transmit(&huart2, (uint8_t*)INITMSG, strlen(INITMSG), 5000);
   
   f_mount(&fs, "", 0);
-  fres = f_opendir(&dir, "0:");
+  fres = f_opendir(&dir, path);
   if (fres == FR_OK) {
     HAL_UART_Transmit(&huart2, (uint8_t*)OPENDIROKMSG, strlen(OPENDIROKMSG), 5000);
   } else {
@@ -116,14 +127,27 @@ int main(void)
   
   while (fres == FR_OK) {
     char *fn;
+    int flen;
+    FIL fp;
     fres = f_readdir(&dir, &finf);
     fn = finf.fname;
     if (fres != FR_OK || fn[0] == '\0') { break; }
     if (fn[0] == '.' || fn[0] == '_') { continue; }
     
+    flen = strlen(fn);
     HAL_UART_Transmit(&huart2, (uint8_t*)FILENAMEMSG, strlen(FILENAMEMSG), 5000);
-    HAL_UART_Transmit(&huart2, fn, strlen(fn), 5000);
+    HAL_UART_Transmit(&huart2, fn, flen, 5000);
     HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 5000);
+    if (flen < 5 || fn[flen-4] != '.' || fn[flen-3] != 'W' || fn[flen-2] != 'A' || fn[flen-1] != 'V') {
+      continue;
+    }
+    HAL_UART_Transmit(&huart2, (uint8_t*)PLAYMSG, strlen(PLAYMSG), 5000);
+    
+    strcpy(&(path[2]), fn);
+    fres = f_open(&fp, path, FA_OPEN_EXISTING | FA_READ);
+    if (fres == FR_OK) {
+      playwav(&fp);
+    }
   }
   
   /* USER CODE END 2 */
@@ -132,16 +156,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    char buff[32];
     int len = 0;
     char ch;
     do {
       HAL_UART_Receive(&huart2, (uint8_t*)(&ch), 1, HAL_MAX_DELAY);
-      HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+      LED3_ON();
       buff[len++] = ch;
     } while (len < 32 && (ch != '\r'));
-    
-    HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+
+    LED3_OFF();
     HAL_UART_Transmit(&huart2, buff, len, 5000);
     HAL_UART_Transmit(&huart2, "\n", 1, 5000);
   /* USER CODE END WHILE */
@@ -153,50 +176,6 @@ int main(void)
 
 }
 
-/** System Clock Configuration
-*/
-void SystemClock_Config(void)
-{
-
-  RCC_OscInitTypeDef RCC_OscInitStruct;
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-    /**Configure the Systick interrupt time 
-    */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-    /**Configure the Systick 
-    */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
-  /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
-}
 
 /* COMP4 init function */
 static void MX_COMP4_Init(void)
@@ -233,7 +212,7 @@ static void MX_DAC1_Init(void)
     /**DAC channel OUT1 config 
     */
   sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
-  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
   if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
@@ -241,6 +220,37 @@ static void MX_DAC1_Init(void)
 
 }
 
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 181;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
 
 /* USART2 init function */
 static void MX_USART2_UART_Init(void)

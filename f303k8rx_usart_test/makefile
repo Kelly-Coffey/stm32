@@ -1,4 +1,4 @@
-PROJECT = nucleof303k8_led
+PROJECT = f303k8rx_usart_test
  
 DIR=~/gcc-arm/bin
 CC=$(DIR)/arm-none-eabi-gcc
@@ -42,10 +42,12 @@ AFLAGS  = $(MCFLAGS)
 
 CSRC = \
 	Src/main.c \
+	Src/systemclock_config.c \
 	Src/stm32f3xx_it.c \
 	Src/stm32f3xx_hal_msp.c \
 	Src/ff.c \
 	Src/stm32fxxx_fatfs_mmc.c \
+	Src/playwav.c \
 	Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c \
@@ -53,7 +55,10 @@ CSRC = \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac_ex.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_comp.c \
 	Src/_exit.c
 
