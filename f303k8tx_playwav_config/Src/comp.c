@@ -1,7 +1,8 @@
 /**
   ******************************************************************************
-  * @file    stm32f3xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * File Name          : COMP.c
+  * Description        : This file provides code for the configuration
+  *                      of the COMP instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -31,38 +32,89 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F3xx_IT_H
-#define __STM32F3xx_IT_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif 
-
 /* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+#include "comp.h"
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-void DMA1_Channel3_IRQHandler(void);
-void DMA1_Channel4_IRQHandler(void);
-void DMA1_Channel5_IRQHandler(void);
-void DMA1_Channel7_IRQHandler(void);
+#include "gpio.h"
 
-#ifdef __cplusplus
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+COMP_HandleTypeDef hcomp4;
+
+/* COMP4 init function */
+void MX_COMP4_Init(void)
+{
+
+  hcomp4.Instance = COMP4;
+  hcomp4.Init.InvertingInput = COMP_INVERTINGINPUT_1_2VREFINT;
+  hcomp4.Init.NonInvertingInput = COMP_NONINVERTINGINPUT_IO1;
+  hcomp4.Init.Output = COMP_OUTPUT_NONE;
+  hcomp4.Init.OutputPol = COMP_OUTPUTPOL_NONINVERTED;
+  hcomp4.Init.BlankingSrce = COMP_BLANKINGSRCE_NONE;
+  hcomp4.Init.TriggerMode = COMP_TRIGGERMODE_NONE;
+  if (HAL_COMP_Init(&hcomp4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
 }
-#endif
 
-#endif /* __STM32F3xx_IT_H */
+void HAL_COMP_MspInit(COMP_HandleTypeDef* compHandle)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+  if(compHandle->Instance==COMP4)
+  {
+  /* USER CODE BEGIN COMP4_MspInit 0 */
+
+  /* USER CODE END COMP4_MspInit 0 */
+  
+    /**COMP4 GPIO Configuration    
+    PB0     ------> COMP4_INP 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN COMP4_MspInit 1 */
+
+  /* USER CODE END COMP4_MspInit 1 */
+  }
+}
+
+void HAL_COMP_MspDeInit(COMP_HandleTypeDef* compHandle)
+{
+
+  if(compHandle->Instance==COMP4)
+  {
+  /* USER CODE BEGIN COMP4_MspDeInit 0 */
+
+  /* USER CODE END COMP4_MspDeInit 0 */
+  
+    /**COMP4 GPIO Configuration    
+    PB0     ------> COMP4_INP 
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
+
+  }
+  /* USER CODE BEGIN COMP4_MspDeInit 1 */
+
+  /* USER CODE END COMP4_MspDeInit 1 */
+} 
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
