@@ -3,6 +3,9 @@
 
 #include <string.h>
 
+extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_usart2_tx;
+
 void UART2_SetConfig(void);
 
 /* USART2 init function */
@@ -50,14 +53,36 @@ void USART2_UART_DMA_Init(DMA_Channel_TypeDef *dmach)
 
   /* Enable the UART transmit DMA channel */
 
+  /* DMA interrupt init */
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+
   /* Peripheral DMA init*/
-  MODIFY_REG(dmach->CCR,
+/*  MODIFY_REG(dmach->CCR,
             DMA_CCR_PL    | DMA_CCR_MSIZE  | DMA_CCR_PSIZE  |
             DMA_CCR_MINC  | DMA_CCR_PINC   | DMA_CCR_CIRC   |
             DMA_CCR_DIR,
             DMA_PRIORITY_LOW | DMA_MDATAALIGN_BYTE | DMA_PDATAALIGN_BYTE |
             DMA_MINC_ENABLE | DMA_PINC_DISABLE | DMA_NORMAL | 
             DMA_MEMORY_TO_PERIPH);
+*/
+  /* Get the CR register value */
+  uint32_t tmp = DMA1_Channel7->CCR;
+  
+  /* Clear PL, MSIZE, PSIZE, MINC, PINC, CIRC, DIR bits */
+  tmp &= ((uint32_t)~(DMA_CCR_PL    | DMA_CCR_MSIZE  | DMA_CCR_PSIZE  | \
+                      DMA_CCR_MINC  | DMA_CCR_PINC   | DMA_CCR_CIRC   | \
+                      DMA_CCR_DIR));
+  
+  /* Prepare the DMA Channel configuration */
+  tmp |=  DMA_MEMORY_TO_PERIPH |
+          DMA_PINC_DISABLE     | DMA_MINC_ENABLE     |
+          DMA_PDATAALIGN_BYTE  | DMA_MDATAALIGN_BYTE |
+          DMA_NORMAL           | DMA_PRIORITY_LOW;
+
+  /* Write to DMA Channel CR register */
+  DMA1_Channel7->CCR = tmp;
 }
 
 
@@ -73,7 +98,7 @@ void UART2_Transmit_DMA(DMA_Channel_TypeDef *dmach, uint8_t *pData, uint16_t Siz
   dmach->CPAR = (uint32_t)&(USART2->TDR);
 
   /* Enable the transfer complete,  Half transfer complete, transfer Error interrupt */
-  dmach->CCR  = DMA_IT_TC | DMA_IT_HT | DMA_IT_TE;
+  dmach->CCR |= DMA_IT_TC | DMA_IT_HT | DMA_IT_TE;
 
   /* Enable the Peripheral */
   dmach->CCR |= DMA_CCR_EN;
@@ -95,9 +120,6 @@ void UART2_Transmit_DMA(DMA_Channel_TypeDef *dmach, uint8_t *pData, uint16_t Siz
   */
 void UART2_SetConfig(void)
 {
-  uint16_t brrtemp                    = 0x0000;
-  uint16_t usartdiv                   = 0x0000;
-
   /*-------------------------- USART CR1 Configuration -----------------------*/
   /* Clear M, PCE, PS, TE, RE and OVER8 bits and configure
    *  the UART Word Length, Parity, Mode and oversampling */
@@ -123,3 +145,75 @@ void UART2_SetConfig(void)
   USART2->BRR = (uint16_t)(UART_DIV_SAMPLING16(HAL_RCC_GetPCLK1Freq(), 38400));
 }
 
+/**
+* @brief This function handles DMA1 channel7 global interrupt.
+*/
+
+/**
+  * @brief  Handles DMA interrupt request.
+  * @param  hdma: pointer to a DMA_HandleTypeDef structure that contains
+  *               the configuration information for the specified DMA Channel.  
+  * @retval None
+  */
+void DMA1_Channel7_IRQHandler(void)
+{
+  /* Transfer Error Interrupt management ***************************************/
+  if(DMA1->ISR & DMA_FLAG_TE7)
+  {
+    if(DMA1_Channel7->CCR & DMA_IT_TE)
+    {
+      /* Disable the transfer error interrupt */
+      DMA1_Channel7->CCR &= ~DMA_IT_TE;
+    
+      /* Clear the transfer error flag */
+      DMA1->IFCR = DMA_FLAG_TE7;
+
+      /* Do Callback */
+    }
+  }
+
+  /* Half Transfer Complete Interrupt management ******************************/
+  if(DMA1->ISR & DMA_FLAG_HT7)
+  {
+    if(DMA1_Channel7->CCR & DMA_IT_HT)
+    { 
+      /* Disable the half transfer interrupt if the DMA mode is not CIRCULAR */
+      if( !(DMA1_Channel7->CCR & DMA_CCR_CIRC) )
+      {
+        /* Disable the half transfer interrupt */
+        DMA1_Channel7->CCR &= ~DMA_IT_HT;
+      }
+      /* Clear the half transfer complete flag */
+      DMA1->IFCR = DMA_FLAG_HT7;
+      
+      /* Do Callback */
+    }
+  }
+  
+  /* Transfer Complete Interrupt management ***********************************/
+  if(DMA1->ISR & DMA_FLAG_TC7)
+  {
+    if(DMA1_Channel7->CCR & DMA_IT_TC)
+    {
+      if( !(DMA1_Channel7->CCR & DMA_CCR_CIRC) )
+      {
+        /* Disable the transfer complete interrupt */
+        DMA1_Channel7->CCR &= ~DMA_IT_TC;
+      }
+      /* Clear the transfer complete flag */
+      DMA1->IFCR = DMA_FLAG_TC7;
+
+      if( !(DMA1_Channel7->CCR & DMA_CCR_CIRC) )
+      {
+        /* Disable the DMA transfer for transmit request by resetting the DMAT bit
+    　     in the UART CR3 register */
+        USART2->CR3 &= (uint32_t)~((uint32_t)USART_CR3_DMAT);
+
+        /* Enable the UART Transmit Complete Interrupt */
+        USART2->CR1 |= (1U << 5);
+      } else {
+        /* Circular mode callback */
+      }
+    }
+  }
+}  

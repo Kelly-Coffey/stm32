@@ -116,6 +116,9 @@ void Init_Peripherals(void)
 {
   /* To use IOREMAP */
   RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+  /* To use DMA1 */
+  RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 }
 
 void _init(void)

@@ -41,14 +41,22 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define VCP_TX_Pin GPIO_PIN_2
+#define VCP_TX_GPIO_Port GPIOA
+#define VCP_RX_Pin GPIO_PIN_15
+#define VCP_RX_GPIO_Port GPIOA
+
 #define SPI_CS_Pin GPIO_PIN_1
 #define SPI_CS_GPIO_Port GPIOA
+
 #define AMP_EN_Pin GPIO_PIN_3
 #define AMP_EN_GPIO_Port GPIOA
 #define DAC1_OUT1_Pin GPIO_PIN_4
 #define DAC1_OUT1_GPIO_Port GPIOA
+
 #define LED3_Pin GPIO_PIN_3
 #define LED3_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
