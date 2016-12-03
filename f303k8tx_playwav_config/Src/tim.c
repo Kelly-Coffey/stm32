@@ -49,7 +49,7 @@ void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 0;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 0;
+  htim6.Init.Period = 100;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
     Error_Handler();
@@ -74,6 +74,10 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM6_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_TIM6_CLK_ENABLE();
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(TIM6_DAC1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM6_DAC1_IRQn);
   /* USER CODE BEGIN TIM6_MspInit 1 */
 
   /* USER CODE END TIM6_MspInit 1 */
@@ -90,6 +94,16 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM6_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_TIM6_CLK_DISABLE();
+
+    /* Peripheral interrupt Deinit*/
+  /* USER CODE BEGIN TIM6:TIM6_DAC1_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "TIM6_DAC1_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(TIM6_DAC1_IRQn); */
+  /* USER CODE END TIM6:TIM6_DAC1_IRQn disable */
+
   }
   /* USER CODE BEGIN TIM6_MspDeInit 1 */
 

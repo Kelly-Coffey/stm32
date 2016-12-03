@@ -35,25 +35,25 @@
 #include "stm32f3xx_hal.h"
 #include "comp.h"
 #include "dac.h"
-#include "dma.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-const char INITMSG[] = "ST-Link UART V-Com output\r\n";
-const char OPENDIROKMSG[] = "fatfs opendir OK\r\n";
-const char OPENDIRNGMSG[] = "fatfs opendir FAILED\r\n";
-const char FILENAMEMSG[] = "fatfs readdir : ";
-
+#include "ff.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+const char INITMSG[] = "ST-Link UART V-Com output\r\n";
+const char OPENDIROKMSG[] = "fatfs opendir OK\r\n";
+const char OPENDIRNGMSG[] = "fatfs opendir FAILED\r\n";
+const char FILENAMEMSG[] = "fatfs readdir : ";
+const char PLAYMSG[] = "play \r\n";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +75,12 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  FATFS fs;
+  DIR dir;
+  FRESULT fres;
+  FILINFO finf;
+
+  char path[64] = "0:";
 
   /* USER CODE END 1 */
 
@@ -88,15 +94,43 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_COMP4_Init();
-  MX_DAC1_Init();
-  MX_SPI1_Init();
-  MX_TIM6_Init();
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
+  HAL_UART_Transmit(&huart2, (uint8_t*)INITMSG, strlen(INITMSG), 5000);
 
+  f_mount(&fs, "", 0);
+  fres = f_opendir(&dir, path);
+  if (fres == FR_OK) {
+    HAL_UART_Transmit(&huart2, (uint8_t*)OPENDIROKMSG, strlen(OPENDIROKMSG), 5000);
+  } else {
+    HAL_UART_Transmit(&huart2, (uint8_t*)OPENDIRNGMSG, strlen(OPENDIRNGMSG), 5000);
+  }
+
+  while (fres == FR_OK) {
+    char *fn;
+    int flen;
+    FIL fp;
+    fres = f_readdir(&dir, &finf);
+    fn = finf.fname;
+    if (fres != FR_OK || fn[0] == '\0') { break; }
+    if (fn[0] == '.' || fn[0] == '_') { continue; }
+    
+    flen = strlen(fn);
+    HAL_UART_Transmit(&huart2, (uint8_t*)FILENAMEMSG, strlen(FILENAMEMSG), 5000);
+    HAL_UART_Transmit(&huart2, fn, flen, 5000);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 5000);
+    if (flen < 5 || fn[flen-4] != '.' || fn[flen-3] != 'W' || fn[flen-2] != 'A' || fn[flen-1] != 'V') {
+      continue;
+    }
+    HAL_UART_Transmit(&huart2, (uint8_t*)PLAYMSG, strlen(PLAYMSG), 5000);
+    
+    strcpy(&(path[2]), fn);
+    fres = f_open(&fp, path, FA_OPEN_EXISTING | FA_READ);
+    if (fres == FR_OK) {
+      playwav(&fp);
+    }
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */

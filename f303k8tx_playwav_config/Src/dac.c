@@ -36,14 +36,12 @@
 #include "dac.h"
 
 #include "gpio.h"
-#include "dma.h"
 
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
 DAC_HandleTypeDef hdac1;
-DMA_HandleTypeDef hdma_dac1_ch1;
 
 /* DAC1 init function */
 void MX_DAC1_Init(void)
@@ -60,7 +58,7 @@ void MX_DAC1_Init(void)
 
     /**DAC channel OUT1 config 
     */
-  sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
+  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
   if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
   {
@@ -89,25 +87,9 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(DAC1_OUT1_GPIO_Port, &GPIO_InitStruct);
 
-    /* Peripheral DMA init*/
-  
-    hdma_dac1_ch1.Instance = DMA1_Channel3;
-    hdma_dac1_ch1.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    hdma_dac1_ch1.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_dac1_ch1.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_dac1_ch1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_dac1_ch1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_dac1_ch1.Init.Mode = DMA_NORMAL;
-    hdma_dac1_ch1.Init.Priority = DMA_PRIORITY_HIGH;
-    if (HAL_DMA_Init(&hdma_dac1_ch1) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_DMA_REMAP_CHANNEL_ENABLE(HAL_REMAPDMA_TIM6_DAC1_CH1_DMA1_CH3);
-
-    __HAL_LINKDMA(dacHandle,DMA_Handle1,hdma_dac1_ch1);
-
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(TIM6_DAC1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM6_DAC1_IRQn);
   /* USER CODE BEGIN DAC1_MspInit 1 */
 
   /* USER CODE END DAC1_MspInit 1 */
@@ -130,8 +112,15 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
     */
     HAL_GPIO_DeInit(DAC1_OUT1_GPIO_Port, DAC1_OUT1_Pin);
 
-    /* Peripheral DMA DeInit*/
-    HAL_DMA_DeInit(dacHandle->DMA_Handle1);
+    /* Peripheral interrupt Deinit*/
+  /* USER CODE BEGIN DAC1:TIM6_DAC1_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "TIM6_DAC1_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(TIM6_DAC1_IRQn); */
+  /* USER CODE END DAC1:TIM6_DAC1_IRQn disable */
+
   }
   /* USER CODE BEGIN DAC1_MspDeInit 1 */
 

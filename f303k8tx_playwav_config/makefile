@@ -48,10 +48,12 @@ CSRC = \
 	Src/main.c \
 	Src/stm32f3xx_it.c \
 	Src/stm32f3xx_hal_msp.c \
+	Src/ff.c \
+	Src/playwav.c \
+	Src/stm32fxxx_fatfs_mmc.c \
 	Src/gpio.c \
 	Src/usart.c \
 	Src/dac.c \
-	Src/dma.c \
 	Src/spi.c \
 	Src/tim.c \
 	Src/comp.c \
@@ -62,7 +64,7 @@ CSRC = \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac.c \
-	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac_ex.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.c \
