@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
-  * @file    stm32f3xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @file    stm32f3xx_it.c
+  * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -30,31 +30,45 @@
   *
   ******************************************************************************
   */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F3xx_IT_H
-#define __STM32F3xx_IT_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif 
-
 /* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+#include "stm32f3xx_hal.h"
+#include "stm32f3xx.h"
+#include "stm32f3xx_it.h"
 
-void SysTick_Handler(void);
-void DMA1_Channel3_IRQHandler(void);
-void DMA1_Channel4_IRQHandler(void);
-void DMA1_Channel5_IRQHandler(void);
-void USART2_IRQHandler(void);
+/* USER CODE BEGIN 0 */
 
-#ifdef __cplusplus
+/* USER CODE END 0 */
+
+/* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_dac1_ch1;
+
+/******************************************************************************/
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
+/******************************************************************************/
+
+/******************************************************************************/
+/* STM32F3xx Peripheral Interrupt Handlers                                    */
+/* Add here the Interrupt Handlers for the used peripherals.                  */
+/* For the available peripheral interrupt handler names,                      */
+/* please refer to the startup file (startup_stm32f3xx.s).                    */
+/******************************************************************************/
+
+/**
+* @brief This function handles DMA1 channel3 global interrupt.
+*/
+void DMA1_Channel3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel3_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_dac1_ch1);
+  /* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel3_IRQn 1 */
 }
-#endif
 
-#endif /* __STM32F3xx_IT_H */
 
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -48,13 +48,26 @@ CSRC = \
 	Src/main.c \
 	Src/gpio.c \
 	Src/usart2.c \
+	Src/dac.c \
+	Src/dma.c \
+	Src/spi.c \
+	Src/tim.c \
 	Src/stm32f3xx_hal_msp.c \
+	Src/stm32f3xx_it.c \
+	Src/ff.c \
+	Src/stm32fxxx_fatfs_mmc.c \
 	Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.c \
-  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c
+  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c \
+  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac_ex.c \
+  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
+  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c \
+  Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.c
 
 
 ASRC = Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc/startup_stm32f303x8.s

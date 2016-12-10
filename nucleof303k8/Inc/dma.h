@@ -1,7 +1,8 @@
 /**
   ******************************************************************************
-  * @file    stm32f3xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * File Name          : dma.h
+  * Description        : This file contains all the function prototypes for
+  *                      the dma.c file
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -30,31 +31,31 @@
   *
   ******************************************************************************
   */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F3xx_IT_H
-#define __STM32F3xx_IT_H
+#ifndef __dma_H
+#define __dma_H
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 /* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+#include "stm32f3xx_hal.h"
+#include "main.h"
 
-void SysTick_Handler(void);
-void DMA1_Channel3_IRQHandler(void);
-void DMA1_Channel4_IRQHandler(void);
-void DMA1_Channel5_IRQHandler(void);
-void USART2_IRQHandler(void);
+/* DMA memory to memory transfer handles -------------------------------------*/
+extern void Error_Handler(void);
+
+void MX_DMA_Init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32F3xx_IT_H */
+#endif /* __dma_H */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -47,6 +47,12 @@
 #define SWCLK_GPIO_Port GPIOA
 #define LED3_Pin GPIO_PIN_3
 #define LED3_GPIO_Port GPIOB
+
+#define MMC_CS_Pin GPIO_PIN_1
+#define MMC_CS_GPIO_Port GPIOA
+#define DAC1_OUT1_Pin GPIO_PIN_4
+#define DAC1_OUT1_GPIO_Port GPIOA
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
