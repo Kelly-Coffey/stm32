@@ -33,7 +33,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "dac.h"
+#include "dac1_tim6_dma.h"
 
 #include "gpio.h"
 
@@ -143,6 +143,55 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+
+/* TIM6 init function */
+void TIM6_Init(uint32_t freq)
+{
+  uint32_t tmpcr2;  
+  uint32_t tmpsmcr;
+  
+  /* Peripheral clock enable */
+  __HAL_RCC_TIM6_CLK_ENABLE();
+  
+  /* Set TIM Time Base Unit parameters ---------------------------------------*/
+
+  /* Set the Autoreload value */
+  TIM6->ARR = (uint32_t)(SystemCoreClock / freq) ;
+ 
+  /* Set the Prescaler value */
+  TIM6->PSC = (uint32_t)0;
+
+  /* Generate an update event to reload the Prescaler */
+  TIM6->EGR = TIM_EGR_UG;
+
+ /* Get the TIM6 CR2 register value */
+  tmpcr2 = TIM6->CR2;
+
+  /* Get the TIM6 SMCR register value */
+  tmpsmcr = TIM6->SMCR;
+
+  /* Reset the MMS Bits */
+  tmpcr2 &= ~TIM_CR2_MMS;
+  /* Select the TRGO source */
+  tmpcr2 |=  TIM_TRGO_UPDATE;
+
+  /* Reset the MSM Bit */
+  tmpsmcr &= ~TIM_SMCR_MSM;
+  /* Set master mode */
+  tmpsmcr |= TIM_MASTERSLAVEMODE_DISABLE;
+  
+  /* Update TIM6 CR2 */
+  TIM6->CR2 = tmpcr2;
+  
+  /* Update TIM6 SMCR */
+  TIM6->SMCR = tmpsmcr;
+}
+
+void TIM6_DeInit()
+{
+  /* Peripheral clock disable */
+  __HAL_RCC_TIM6_CLK_DISABLE();
+} 
 
 /**
 * @brief This function handles DMA1 channel3 global interrupt.

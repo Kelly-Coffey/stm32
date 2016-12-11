@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.c
+  * File Name          : DAC.h
   * Description        : This file provides code for the configuration
-  *                      of the TIM instances.
+  *                      of the DAC instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -31,57 +31,48 @@
   *
   ******************************************************************************
   */
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __dac_H
+#define __dac_H
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "tim6.h"
+#include "stm32f3xx_hal.h"
+#include "main.h"
 
-/* TIM6 init function */
-void TIM6_Init(uint32_t freq)
-{
-  uint32_t tmpcr2;  
-  uint32_t tmpsmcr;
-  
-  /* Peripheral clock enable */
-  __HAL_RCC_TIM6_CLK_ENABLE();
-  
-  /* Set TIM Time Base Unit parameters ---------------------------------------*/
+/* USER CODE BEGIN Includes */
 
-  /* Set the Autoreload value */
-  TIM6->ARR = (uint32_t)(SystemCoreClock / freq) ;
- 
-  /* Set the Prescaler value */
-  TIM6->PSC = (uint32_t)0;
+/* USER CODE END Includes */
 
-  /* Generate an update event to reload the Prescaler */
-  TIM6->EGR = TIM_EGR_UG;
+extern DAC_HandleTypeDef hdac1;
 
- /* Get the TIM6 CR2 register value */
-  tmpcr2 = TIM6->CR2;
+/* USER CODE BEGIN Private defines */
 
-  /* Get the TIM6 SMCR register value */
-  tmpsmcr = TIM6->SMCR;
+/* USER CODE END Private defines */
 
-  /* Reset the MMS Bits */
-  tmpcr2 &= ~TIM_CR2_MMS;
-  /* Select the TRGO source */
-  tmpcr2 |=  TIM_TRGO_UPDATE;
+extern void Error_Handler(void);
 
-  /* Reset the MSM Bit */
-  tmpsmcr &= ~TIM_SMCR_MSM;
-  /* Set master mode */
-  tmpsmcr |= TIM_MASTERSLAVEMODE_DISABLE;
-  
-  /* Update TIM6 CR2 */
-  TIM6->CR2 = tmpcr2;
-  
-  /* Update TIM6 SMCR */
-  TIM6->SMCR = tmpsmcr;
+void MX_DAC1_Init(void);
+
+/* USER CODE BEGIN Prototypes */
+void TIM6_Init(uint32_t freq);
+void TIM6_DeInit(void);
+
+/* USER CODE END Prototypes */
+
+#ifdef __cplusplus
 }
+#endif
+#endif /*__ dac_H */
 
-void TIM6_DeInit()
-{
-  /* Peripheral clock disable */
-  __HAL_RCC_TIM6_CLK_DISABLE();
-} 
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

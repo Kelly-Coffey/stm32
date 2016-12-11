@@ -33,8 +33,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
-#include "dac.h"
-#include "tim6.h"
+#include "dac1_tim6_dma.h"
 #include "spi1.h"
 #include "usart2.h"
 #include "gpio.h"
