@@ -48,12 +48,10 @@ CSRC = \
 	Src/main.c \
 	Src/gpio.c \
 	Src/usart2.c \
+	Src/spi1.c \
+	Src/tim6.c \
 	Src/dac.c \
-	Src/dma.c \
-	Src/spi.c \
-	Src/tim.c \
 	Src/stm32f3xx_hal_msp.c \
-	Src/stm32f3xx_it.c \
 	Src/ff.c \
 	Src/stm32fxxx_fatfs_mmc.c \
 	Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c \

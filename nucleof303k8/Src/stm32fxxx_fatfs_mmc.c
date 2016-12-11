@@ -13,7 +13,7 @@
 
 #include "main.h"
 #include "diskio.h"
-#include "spi.h"
+#include "spi1.h"
 #include "stm32f3xx_hal.h"
 
 /* MMC/SD command */

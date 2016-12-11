@@ -34,9 +34,8 @@
 #include "main.h"
 #include "stm32f3xx_hal.h"
 #include "dac.h"
-#include "dma.h"
-#include "spi.h"
-#include "tim.h"
+#include "tim6.h"
+#include "spi1.h"
 #include "usart2.h"
 #include "gpio.h"
 
@@ -282,9 +281,11 @@ int main(void)
   MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
-  MX_DMA_Init();
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
   MX_DAC1_Init();
-  MX_TIM6_Init();
   USART2_UART_Init();
 
   UART2_Transmit_String(INITMSG);
@@ -297,6 +298,57 @@ int main(void)
     UART2_Transmit_String(OPENDIRNGMSG);
   }
   
+  while (fres == FR_OK) {
+    char* fn;
+    int flen;
+    
+    fres = f_readdir(&dir, &finf);
+    fn = finf.fname;
+    if (fres != FR_OK || fn[0] == '\0') { break; }
+    if (fn[0] == '.' || fn[0] == '_') { continue; }
+    
+    flen = strlen(fn);
+    sprintf(text, FILENAMEMSG, fn);
+    UART2_Transmit_String(text);
+    if (flen < 5 || fn[flen-4] != '.' || fn[flen-3] != 'W' || fn[flen-2] != 'A' || fn[flen-1] != 'V') {
+      continue;
+    }
+    UART2_Transmit_String(PLAYMSG);
+    
+    strcpy(&(path[2]), fn);
+    fres = f_open(&fp, path, FA_OPEN_EXISTING | FA_READ);
+    if (fres == FR_OK) {
+      size = loadheader(&fp);
+      sprintf(text, SIZEMSG, size);
+      UART2_Transmit_String(text);
+      break;
+    }
+  }
+
+  unsigned int pad = 512 - (fp.fptr % 512);
+  if (pad == 0) pad = 512;
+
+  f_read(&fp, (uint8_t*)(buffer[0]), pad, &rb);
+  dp = (uint16_t*)(buffer[0]);
+  for (int i=0; i<rb; i+=2, dp++) {
+    *dp = (*dp & 0xfff0) + 0x8000;
+  }
+  size -= pad;
+  f_read(&fp, (uint8_t*)(buffer[1]), 1024, &rb);
+  dp = (uint16_t*)(buffer[1]);
+  for (int i=0; i<rb; i+=2, dp++) {
+    *dp = (*dp & 0xfff0) + 0x8000;
+  }
+  size -= 1024;
+  nextbuf = 1;
+  nextsize = 512;
+  
+  TIM6_Init(freq);
+
+  /* Enable the TIM peripheral. */
+  TIM6->CR1 |= TIM_CR1_CEN;
+
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)(buffer[0]), (pad>>1), DAC_ALIGN_12B_L);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -305,6 +357,39 @@ int main(void)
   
   while (1)
   {
+    if (HAL_DMA_GetState(hdac1.DMA_Handle1) == HAL_DMA_STATE_READY) {
+      if (nextsize) {
+        HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)(buffer[nextbuf]), nextsize, DAC_ALIGN_12B_L);
+      } else {
+        UART2_Transmit_String(PLAYENDMSG);
+        break;
+      }
+      
+      if (size) {
+        HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, SET);
+
+        nextbuf = 1-nextbuf;      
+        nextsize = (size >= 1024) ? 1024 : size;
+        f_read(&fp, (uint8_t*)(buffer[nextbuf]), nextsize, &rb);
+
+        if (rb != nextsize) {
+          sprintf(text, "size:%u nextsize:%u rb:%u\r\n", size, nextsize, rb);
+          UART2_Transmit_String(text);
+          break;
+        }
+        size -= rb;
+        nextsize >>= 1;
+      
+        dp = (uint16_t*)(buffer[nextbuf]);
+        for (int i=0; i<rb; i+=2, dp++) {
+          *dp = (*dp & 0xfff0) + 0x8000;
+        }
+      } else {
+        nextsize = 0;
+      }
+      HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, RESET);
+    }
+
     while (UART2_IsDataReceived()) {
       uint8_t c = UART2_Receive();
       UART2_Transmit(c);
@@ -312,16 +397,31 @@ int main(void)
        UART2_Transmit('\n');
       }
     }
-    
-    if ( (HAL_GetTick() - tick) >= 500) {
-      HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
-      tick = HAL_GetTick();
-    }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 
   }
+  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, RESET);
+
+  /* Disable the TIM peripheral. */
+  TIM6->CR1 &= ~TIM_CR1_CEN;
+
+  HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
+  
+  HAL_DAC_DeInit(&hdac1);
+  TIM6_DeInit();
+
+  SPI1_DeInit();
+  
+  /* DMA controller clock disable */
+  __HAL_RCC_DMA1_CLK_DISABLE();
+  
+  UART2_Transmit_String(ENDMSG);
+
+  while (1)
+  {}
+
 #if 0
   /* USER CODE END 3 */
 

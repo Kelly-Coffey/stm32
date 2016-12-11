@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.h
+  * File Name          : SPI.h
   * Description        : This file provides code for the configuration
-  *                      of the TIM instances.
+  *                      of the SPI instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -32,8 +32,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __tim_H
-#define __tim_H
+#ifndef __spi_H
+#define __spi_H
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -42,35 +42,12 @@
 #include "stm32f3xx_hal.h"
 #include "main.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-extern TIM_HandleTypeDef htim6;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-extern void Error_Handler(void);
-
-void MX_TIM6_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-
-/* USER CODE END Prototypes */
+void SPI1_Init(void);
+void SPI1_DeInit(void);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ tim_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /*__ spi_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

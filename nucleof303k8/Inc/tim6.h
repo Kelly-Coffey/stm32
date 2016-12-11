@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : dma.h
-  * Description        : This file contains all the function prototypes for
-  *                      the dma.c file
+  * File Name          : TIM.h
+  * Description        : This file provides code for the configuration
+  *                      of the TIM instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -32,9 +32,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __dma_H
-#define __dma_H
-
+#ifndef __tim_H
+#define __tim_H
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -43,19 +42,13 @@
 #include "stm32f3xx_hal.h"
 #include "main.h"
 
-/* DMA memory to memory transfer handles -------------------------------------*/
-extern void Error_Handler(void);
+void TIM6_Init(uint32_t freq);
+void TIM6_DeInit(void);
 
-void MX_DMA_Init(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __dma_H */
-
-/**
-  * @}
-  */
+#endif /*__ tim_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : dma.c
+  * File Name          : TIM.c
   * Description        : This file provides code for the configuration
-  *                      of all the requested memory to memory DMA transfers.
+  *                      of the TIM instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -31,32 +31,57 @@
   *
   ******************************************************************************
   */
+
 /* Includes ------------------------------------------------------------------*/
-#include "dma.h"
+#include "tim6.h"
 
-/*----------------------------------------------------------------------------*/
-/* Configure DMA                                                              */
-/*----------------------------------------------------------------------------*/
-
-/** 
-  * Enable DMA controller clock
-  */
-void MX_DMA_Init(void) 
+/* TIM6 init function */
+void TIM6_Init(uint32_t freq)
 {
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+  uint32_t tmpcr2;  
+  uint32_t tmpsmcr;
   
-  /* DMA1_Channel4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
-  /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+  /* Peripheral clock enable */
+  __HAL_RCC_TIM6_CLK_ENABLE();
+  
+  /* Set TIM Time Base Unit parameters ---------------------------------------*/
+
+  /* Set the Autoreload value */
+  TIM6->ARR = (uint32_t)(SystemCoreClock / freq) ;
+ 
+  /* Set the Prescaler value */
+  TIM6->PSC = (uint32_t)0;
+
+  /* Generate an update event to reload the Prescaler */
+  TIM6->EGR = TIM_EGR_UG;
+
+ /* Get the TIM6 CR2 register value */
+  tmpcr2 = TIM6->CR2;
+
+  /* Get the TIM6 SMCR register value */
+  tmpsmcr = TIM6->SMCR;
+
+  /* Reset the MMS Bits */
+  tmpcr2 &= ~TIM_CR2_MMS;
+  /* Select the TRGO source */
+  tmpcr2 |=  TIM_TRGO_UPDATE;
+
+  /* Reset the MSM Bit */
+  tmpsmcr &= ~TIM_SMCR_MSM;
+  /* Set master mode */
+  tmpsmcr |= TIM_MASTERSLAVEMODE_DISABLE;
+  
+  /* Update TIM6 CR2 */
+  TIM6->CR2 = tmpcr2;
+  
+  /* Update TIM6 SMCR */
+  TIM6->SMCR = tmpsmcr;
 }
+
+void TIM6_DeInit()
+{
+  /* Peripheral clock disable */
+  __HAL_RCC_TIM6_CLK_DISABLE();
+} 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -33,10 +33,9 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "spi.h"
+#include "spi1.h"
 
 #include "gpio.h"
-#include "dma.h"
 
 #include <string.h>
 
@@ -113,58 +112,46 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     HAL_DMA_Init(&hdma_spi1_tx);
 
     __HAL_DMA_REMAP_CHANNEL_ENABLE(HAL_REMAPDMA_SPI1_TX_DMA1_CH5);
+
+  /* DMA1_Channel4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+  
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 }
 
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
+void SPI1_DeInit(void)
 {
+  SPI_HandleTypeDef hspi1;
   DMA_HandleTypeDef hdma_spi1_rx;
   DMA_HandleTypeDef hdma_spi1_tx;
 
+  memset(&hspi1, 0, sizeof(SPI_HandleTypeDef));
   memset(&hdma_spi1_rx, 0, sizeof(DMA_HandleTypeDef));
   memset(&hdma_spi1_tx, 0, sizeof(DMA_HandleTypeDef));
 
-    hdma_spi1_rx.Instance = DMA1_Channel4;
-    hdma_spi1_tx.Instance = DMA1_Channel5;
+  hspi1.Instance = SPI1;
+  hdma_spi1_rx.Instance = DMA1_Channel4;
+  hdma_spi1_tx.Instance = DMA1_Channel5;
 
-    /* Peripheral clock disable */
-    __HAL_RCC_SPI1_CLK_DISABLE();
+  /* Disable the SPI Peripheral Clock */
+  __HAL_SPI_DISABLE(&hspi1);
+
+  /* Peripheral clock disable */
+  __HAL_RCC_SPI1_CLK_DISABLE();
   
-    /**SPI1 GPIO Configuration    
+  /**SPI1 GPIO Configuration    
     PA5     ------> SPI1_SCK
     PA6     ------> SPI1_MISO
     PA7     ------> SPI1_MOSI 
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
+  */
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
 
-    /* Peripheral DMA DeInit*/
-    HAL_DMA_DeInit(spiHandle->hdmarx);
-    HAL_DMA_DeInit(spiHandle->hdmatx);
+  /* Peripheral DMA DeInit*/
+  HAL_DMA_DeInit(&hdma_spi1_rx);
+  HAL_DMA_DeInit(&hdma_spi1_tx);
 } 
-
-/* USER CODE BEGIN 1 */
-/**
-* @brief This function handles DMA1 channel4 global interrupt.
-*/
-//void DMA1_Channel4_IRQHandler(void)
-//{
-//  HAL_DMA_IRQHandler(&hdma_spi1_rx);
-//}
-
-/**
-* @brief This function handles DMA1 channel5 global interrupt.
-*/
-//void DMA1_Channel5_IRQHandler(void)
-//{
-//  HAL_DMA_IRQHandler(&hdma_spi1_tx);
-//}
-/* USER CODE END 1 */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

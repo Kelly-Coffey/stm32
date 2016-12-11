@@ -102,11 +102,9 @@ void UART2_DeInit(void)
 
 void UART2_Transmit(uint8_t c)
 {
-  unsigned int tmp_h = TX_head;
-  unsigned int tmp_t;
-  do {
-    tmp_t = (TX_tail + 1) & (UART_BUFSIZE - 1);
-  } while (tmp_h == tmp_t);
+  unsigned int tmp_t = (TX_tail + 1) & (UART_BUFSIZE - 1);
+  
+  while (TX_head == tmp_t) ;
 
   NVIC_DisableIRQ(USART2_IRQn);
   TX_Buff[TX_tail] = c;
@@ -134,10 +132,8 @@ uint8_t UART2_Receive(void)
 {
   uint8_t c;
   unsigned int tmp_h = RX_head;
-  unsigned int tmp_t;
-  do {
-    tmp_t = RX_tail;
-  } while (tmp_h == tmp_t);
+
+  while (tmp_h == RX_tail) ;
   
   NVIC_DisableIRQ(USART2_IRQn);
   c = RX_Buff[tmp_h++];

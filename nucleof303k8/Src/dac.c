@@ -36,7 +36,6 @@
 #include "dac.h"
 
 #include "gpio.h"
-#include "dma.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -110,6 +109,11 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
 
   /* USER CODE BEGIN DAC1_MspInit 1 */
 
+  /* DMA interrupt init */
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+
   /* USER CODE END DAC1_MspInit 1 */
   }
 }
@@ -139,6 +143,14 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+
+/**
+* @brief This function handles DMA1 channel3 global interrupt.
+*/
+void DMA1_Channel3_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_dac1_ch1);
+}
 
 /* USER CODE END 1 */
 
