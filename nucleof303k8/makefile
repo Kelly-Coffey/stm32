@@ -37,8 +37,8 @@ STM32_INCLUDES = \
 	-IDrivers/STM32F3xx_HAL_Driver/Inc/Legacy \
 	-IDrivers/STM32F3xx_HAL_Driver/Inc
 
-#OPTIMIZE = -Os
-OPTIMIZE = -gdwarf-2 -O0 -flto-partition=none -fipa-sra
+OPTIMIZE = -Os
+#OPTIMIZE = -gdwarf-2 -O0 -flto-partition=none -fipa-sra
 
 CFLAGS  = $(MCFLAGS) $(OPTIMIZE) $(NANOLIB) $(SEMIHOST_LIB) $(DEFS) $(STM32_INCLUDES)
 CFLAGS += -Wl,-T,STM32F303K8Tx_FLASH.ld
@@ -60,7 +60,6 @@ CSRC = \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.c \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac.c \
-	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dac_ex.c \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
   Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c
 

@@ -38,16 +38,11 @@
 #include "usart2.h"
 #include "gpio.h"
 
-/* USER CODE BEGIN Includes */
 #include "ff.h"
 #include "string.h"
 
 #include <errno.h>
-/* USER CODE END Includes */
 
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
 #define FCC(c1,c2,c3,c4)	(((DWORD)c4<<24)+((DWORD)c3<<16)+((WORD)c2<<8)+(BYTE)c1)	/* FourCC */
@@ -57,25 +52,19 @@ const char OPENDIROKMSG[] = "fatfs opendir OK\r\n";
 const char OPENDIRNGMSG[] = "fatfs opendir FAILED\r\n";
 const char FILENAMEMSG[] = "fatfs readdir : %s\r\n";
 const char PLAYMSG[] = "play \r\n";
-const char SIZEMSG[] = "size: %u\r\n";
+const char INFOMSG[] = "size: %u, freq: %u, resolution: %u, channel: %u\r\n";
 const char PLAYENDMSG[] = "play end\r\n";
+const char REMAINMSG[] = "size:%u nextsize:%u rb:%u\r\n";
 const char ENDMSG[] = "end\r\n";
 
 volatile uint16_t freq;
 volatile uint8_t channel;
 volatile uint8_t resolution;
-/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void Error_Handler(void);
 
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-
-/* USER CODE END PFP */
-
-/* USER CODE BEGIN 0 */
 void _init(void)
 {
 }
@@ -241,12 +230,8 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/* USER CODE END 0 */
-
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
   uint32_t tick;
 
   FATFS fs;
@@ -266,12 +251,14 @@ int main(void)
   char text[128];
   
   char path[64] = "0:";
-  /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+  /* Configure Flash prefetch */
+  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+
+  /* Init the low level hardware */
+  HAL_MspInit();
 
   /* Configure the system clock */
   SystemClock_Config();
@@ -279,12 +266,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
 
-  /* USER CODE BEGIN 2 */
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
 
-  MX_DAC1_Init();
+  DAC1_Init();
   USART2_UART_Init();
 
   UART2_Transmit_String(INITMSG);
@@ -318,7 +304,7 @@ int main(void)
     fres = f_open(&fp, path, FA_OPEN_EXISTING | FA_READ);
     if (fres == FR_OK) {
       size = loadheader(&fp);
-      sprintf(text, SIZEMSG, size);
+      sprintf(text, INFOMSG, size, freq, resolution, channel);
       UART2_Transmit_String(text);
       break;
     }
@@ -347,18 +333,17 @@ int main(void)
   /* Enable the TIM peripheral. */
   TIM6->CR1 |= TIM_CR1_CEN;
 
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)(buffer[0]), (pad>>1), DAC_ALIGN_12B_L);
-  /* USER CODE END 2 */
+  DAC1_Start_DMA((uint32_t*)(buffer[0]), (pad>>1), DAC_ALIGN_12B_L);
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+
   tick = HAL_GetTick();
   
   while (1)
   {
-    if (HAL_DMA_GetState(hdac1.DMA_Handle1) == HAL_DMA_STATE_READY) {
+    if (DAC1_State == HAL_DMA_STATE_READY) {
       if (nextsize) {
-        HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)(buffer[nextbuf]), nextsize, DAC_ALIGN_12B_L);
+        DAC1_Start_DMA((uint32_t*)(buffer[nextbuf]), nextsize, DAC_ALIGN_12B_L);
       } else {
         UART2_Transmit_String(PLAYENDMSG);
         break;
@@ -372,7 +357,7 @@ int main(void)
         f_read(&fp, (uint8_t*)(buffer[nextbuf]), nextsize, &rb);
 
         if (rb != nextsize) {
-          sprintf(text, "size:%u nextsize:%u rb:%u\r\n", size, nextsize, rb);
+          sprintf(text, REMAINMSG, size, nextsize, rb);
           UART2_Transmit_String(text);
           break;
         }
@@ -396,19 +381,15 @@ int main(void)
        UART2_Transmit('\n');
       }
     }
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-
   }
   HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, RESET);
 
   /* Disable the TIM peripheral. */
   TIM6->CR1 &= ~TIM_CR1_CEN;
 
-  HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
+  DAC1_Stop_DMA();
   
-  HAL_DAC_DeInit(&hdac1);
+  DAC1_DeInit();
   TIM6_DeInit();
 
   SPI1_DeInit();
@@ -420,37 +401,6 @@ int main(void)
 
   while (1)
   {}
-
-#if 0
-  /* USER CODE END 3 */
-
-/* USER CODE BEGIN 4 */
-#endif
 }
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler */
-  /* User can add his own implementation to report the HAL error return state */
-  while(1) 
-  {
-  }
-  /* USER CODE END Error_Handler */ 
-}
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-*/ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

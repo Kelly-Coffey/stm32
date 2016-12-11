@@ -42,37 +42,22 @@
 #include "stm32f3xx_hal.h"
 #include "main.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-extern DAC_HandleTypeDef hdac1;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
+extern HAL_DMA_StateTypeDef DAC1_State; 
 
 extern void Error_Handler(void);
 
-void MX_DAC1_Init(void);
+void DAC1_Init(void);
+void DAC1_DeInit(void);
 
-/* USER CODE BEGIN Prototypes */
 void TIM6_Init(uint32_t freq);
 void TIM6_DeInit(void);
 
-/* USER CODE END Prototypes */
+void DAC1_Start_DMA(uint32_t* pData, uint32_t Length, uint32_t Alignment);
+void DAC1_Stop_DMA(void);
 
 #ifdef __cplusplus
 }
 #endif
 #endif /*__ dac_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

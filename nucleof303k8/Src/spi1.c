@@ -112,14 +112,6 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     HAL_DMA_Init(&hdma_spi1_tx);
 
     __HAL_DMA_REMAP_CHANNEL_ENABLE(HAL_REMAPDMA_SPI1_TX_DMA1_CH5);
-
-  /* DMA1_Channel4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
-  
-  /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 }
 
 void SPI1_DeInit(void)
