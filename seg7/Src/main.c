@@ -45,6 +45,9 @@ DAC_HandleTypeDef hdac1;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim15;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -62,6 +65,8 @@ static void MX_COMP4_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_TIM15_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -81,60 +86,60 @@ void Output_Digit(uint8_t dat, __IO uint32_t* brr)
     DAT_GPIO_Port->BRR = DAT_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
-
+  
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x40) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x20) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x10) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x08) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x04) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x02) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
-  SCK_GPIO_Port->BRR = SCK_Pin;
 
+/*  SCK_GPIO_Port->BRR = SCK_Pin; */
   if (dat & 0x01) {
-    DAT_GPIO_Port->BSRR = DAT_Pin;
+    GPIOA->BSRR = DAT_Pin | (SCK_Pin << 16);
   } else {
-    DAT_GPIO_Port->BRR = DAT_Pin;
+    GPIOA->BRR = DAT_Pin | SCK_Pin;
   }
   SCK_GPIO_Port->BSRR = SCK_Pin;
   SCK_GPIO_Port->BRR = SCK_Pin;
@@ -150,9 +155,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  uint16_t count = 0;
   uint8_t row = 0;
-  uint8_t pre = 5;
+  __IO uint16_t count = 0;
 
   /* USER CODE END 1 */
 
@@ -170,8 +174,15 @@ int main(void)
   MX_DAC1_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_TIM3_Init();
+  MX_TIM15_Init();
 
   /* USER CODE BEGIN 2 */
+  __HAL_TIM_CLEAR_IT(&htim15, TIM_IT_UPDATE);
+  HAL_TIM_Base_Start_IT(&htim15);
+  HAL_TIM_Base_Start(&htim3);
+
+  count = __HAL_TIM_GET_COUNTER(&htim3);
 
   /* USER CODE END 2 */
 
@@ -204,10 +215,11 @@ int main(void)
     row = (row+1) & 0x03;
     
     HAL_Delay(2);
-    if (!(--pre)) {
-      pre = 5;
-      count = count + 1;
-      if (count == 20000) count = 10000;
+
+    if (__HAL_TIM_GET_FLAG(&htim15, TIM_IT_UPDATE))
+    {
+      __HAL_TIM_CLEAR_IT(&htim15, TIM_IT_UPDATE);
+      count = __HAL_TIM_GET_COUNTER(&htim3);
     }
   /* USER CODE END WHILE */
 
@@ -325,6 +337,72 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* TIM3 init function */
+static void MX_TIM3_Init(void)
+{
+
+  TIM_SlaveConfigTypeDef sSlaveConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 60000-1;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+  sSlaveConfig.InputTrigger = TIM_TS_ITR2;
+  if (HAL_TIM_SlaveConfigSynchronization(&htim3, &sSlaveConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* TIM15 init function */
+static void MX_TIM15_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim15.Instance = TIM15;
+  htim15.Init.Prescaler = 10000-1;
+  htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim15.Init.Period = 8-1;
+  htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim15.Init.RepetitionCounter = 0;
+  if (HAL_TIM_Base_Init(&htim15) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim15, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim15, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
