@@ -1,3 +1,13 @@
+hidapi:
+$ sudo apt-get install libudev-dev
+$ git clone git://github.com/signal11/hidapi.git
+$ cd hidapi
+$ ./bootstrap
+$ ./configure
+$ make
+$ sudo make install
+$ sudo ln -s /usr/local/lib/libhidapi-hidraw.so.0 /usr/lib/libhidapi-hidraw.so.0
+
 OpenOCD:
 
 $ sudo apt-get install git
@@ -6,11 +16,14 @@ $ sudo apt-get install texinfo
 $ sudo apt-get install libusb-1.0-0-dev
 $ git clone http://repo.or.cz/r/openocd.git openocd
 $ ./bootstrap 
-$ ./configure --enable-stlink
+$ ./configure --enable-stlink --enable-cmsis-dap
 $ make -j2
 $ grep 374b contrib/99-openocd.rules > 99-stlink.rules
 $ cat 99-stlink.rules 
 $ sudo cp 99-stlink.rules /etc/udev/rules.d/
+$ grep CMSIS contrib/99-openocd.rules > 99-CMSIS.rules
+$ cat 99-CMSIS.rules
+$ sudo cp 99-CMSIS.rules /etc/udev/rules.d/
 $ sudo service udev restart
 $ cd tcl
 $ ../src/openocd -f board/st_nucleo_f3.cfg 
