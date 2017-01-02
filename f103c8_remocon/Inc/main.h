@@ -44,6 +44,7 @@
 #define PULSE_Pin GPIO_PIN_0
 #define PULSE_GPIO_Port GPIOA
 #define BTN_Pin GPIO_PIN_13
+#define BTN2_Pin GPIO_PIN_14
 #define BTN_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 

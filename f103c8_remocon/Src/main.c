@@ -44,6 +44,7 @@
 /* Private variables ---------------------------------------------------------*/
 __IO uint8_t cnt = 0;
 __IO uint8_t bcnt = 7;
+__IO uint8_t *cmd;
 
 __I uint16_t pulse_Lead[] = {12*16-1, 8*16-1};
 __I uint16_t pulse_H[]    = {4*16-1, 16-1};
@@ -51,6 +52,7 @@ __I uint16_t pulse_L[]    = {2*16-1, 16-1};
 __I uint16_t pulse_Stop[] = {400-1, 16-1};
 
 __I uint8_t power[] = {0x55,0x5A,0xF1,0x48,0x68,0x8B};
+__I uint8_t input[] = {0x55,0x5A,0xF1,0x48,0xC8,0x81};
 
 /* USER CODE END PV */
 
@@ -92,7 +94,7 @@ void TIM3_IRQHandler(void)
       return;        
     }
     
-    uint8_t code = power[cnt];
+    uint8_t code = cmd[cnt];
     
     if (code & (1<<bcnt)) {
       TIM3->ARR  = pulse_H[0];
@@ -215,6 +217,20 @@ int main(void)
       if ( !(TIM3->CR1 & TIM_CR1_CEN) ) {
         cnt = 0;
         bcnt = 7;
+        cmd = power;
+        TIM3->ARR  = pulse_Lead[0];
+        TIM3->CCR1 = pulse_Lead[1];
+
+        TIM3_Start();
+        TIM2_Start();
+      }
+    }
+
+    if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN2_Pin) == RESET) {
+      if ( !(TIM3->CR1 & TIM_CR1_CEN) ) {
+        cnt = 0;
+        bcnt = 7;
+        cmd = input;
         TIM3->ARR  = pulse_Lead[0];
         TIM3->CCR1 = pulse_Lead[1];
 
@@ -324,8 +340,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN_Pin */
-  GPIO_InitStruct.Pin = BTN_Pin;
+  /*Configure GPIO pin : BTN_Pin, BTN2_Pin */
+  GPIO_InitStruct.Pin = BTN_Pin | BTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BTN_GPIO_Port, &GPIO_InitStruct);
