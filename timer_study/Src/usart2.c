@@ -57,7 +57,7 @@ void USART2_UART_Init(void)
 
   TX_head = TX_tail = 0;
   RX_head = RX_tail = 0;
-  
+
   /* Enable Receive Data register not empty interrupt */
   USART2->CR1 |= USART_CR1_RXNEIE;
 }
@@ -68,10 +68,10 @@ void UART2_Init(void)
 
   /* Peripheral clock enable */
   __HAL_RCC_USART2_CLK_ENABLE();
-  
-  /**USART2 GPIO Configuration    
+
+  /**USART2 GPIO Configuration
     PA2     ------> USART2_TX
-    PA15     ------> USART2_RX 
+    PA15     ------> USART2_RX
   */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -89,10 +89,10 @@ void UART2_DeInit(void)
 {
   /* Peripheral clock disable */
   __HAL_RCC_USART2_CLK_DISABLE();
-  
+
   /* USART2 GPIO Configuration
     PA2     ------> USART2_TX
-    PA15     ------> USART2_RX 
+    PA15     ------> USART2_RX
   */
   HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_15);
 
@@ -103,7 +103,7 @@ void UART2_DeInit(void)
 void UART2_Transmit(uint8_t c)
 {
   unsigned int tmp_t = (TX_tail + 1) & (UART_BUFSIZE - 1);
-  
+
   while (TX_head == tmp_t) ;
 
   NVIC_DisableIRQ(USART2_IRQn);
@@ -134,12 +134,12 @@ uint8_t UART2_Receive(void)
   unsigned int tmp_h = RX_head;
 
   while (tmp_h == RX_tail) ;
-  
+
   NVIC_DisableIRQ(USART2_IRQn);
   c = RX_Buff[tmp_h++];
   RX_head = tmp_h & (UART_BUFSIZE - 1);
   NVIC_EnableIRQ(USART2_IRQn);
-  
+
   return c;
 }
 

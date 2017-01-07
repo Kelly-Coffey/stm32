@@ -143,12 +143,19 @@ void TIM3_Init(void)
 {
   __HAL_RCC_TIM3_CLK_ENABLE();
 
+  /* Peripheral interrupt init */
+  HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+
   TIM3->CR1  = TIM_COUNTERMODE_UP | TIM_CLOCKDIVISION_DIV1;
   TIM3->CR2  = 0;
   /* ClockSource External1, ITR1 (TIM2) */
   TIM3->SMCR = TIM_SLAVEMODE_EXTERNAL1 | TIM_TS_ITR1;
-
   TIM3->DIER = 0;           /* interrupt disable */
+
+  /* Input Capture 1 from COMP2(TI1), Preload disabled */
+  TIM3->CCMR1 = TIM_CCMR1_CC1S_0;
+  TIM3->CCER = 0;
 
   TIM3->PSC = 0;
   TIM3->ARR = 60000-1;
@@ -157,6 +164,11 @@ void TIM3_Init(void)
 
   /* clear all flag */
   TIM3->SR = 0;
+}
+
+static void COMP2_Init(void)
+{
+  COMP2->CSR = COMP_OUTPUT_TIM3IC1 | COMP_INVERTINGINPUT_VREFINT | COMP_CSR_COMPxEN;
 }
 
 void init_start_led(void)
@@ -182,8 +194,8 @@ void led_drive(void)
 
   if (TIM2->SR & TIM_SR_UIF) {
     TIM2->SR = ~(TIM_SR_UIF);
+    count = TIM3->CNT;
     if (tim_to_led) {
-      count = TIM3->CNT;
       setled(count);
     }
   }
@@ -210,6 +222,15 @@ void led_drive(void)
     Output_Digit(leddat[3], &LED_DAT_GPIO_Port->BSRR);
   }
 }
+
+void TIM3_IRQHandler(void)
+{
+  if (TIM3->SR & TIM_SR_CC1IF) {
+    tim_to_led = 0;
+    TIM3->DIER = 0;
+    TIM3->CCER = 0;
+  }
+}
 /* USER CODE END 0 */
 
 int main(void)
@@ -231,11 +252,15 @@ int main(void)
   MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
+  COMP2_Init();
 
   count = 0;
   tim_to_led = 1;
   setled(count);
   init_start_led();
+
+  TIM3->CCER = TIM_CCER_CC1E;
+  TIM3->DIER = TIM_DIER_CC1IE;
 
   /* USER CODE END 2 */
 
@@ -244,6 +269,11 @@ int main(void)
   while (1)
   {
     led_drive();
+
+    if (TIM3->SR & TIM_SR_CC1IF) {
+      TIM3->SR = ~(TIM_SR_CC1IF);
+      setled(TIM3->CCR1);
+    }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

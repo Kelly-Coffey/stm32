@@ -52,6 +52,7 @@ CSRC = \
 	Src/stm32f3xx_it.c \
 	Src/system_stm32f3xx.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c \
+	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_comp.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
 	Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash.c \
