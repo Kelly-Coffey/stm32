@@ -33,7 +33,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
-#include "tim.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -44,9 +43,11 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint8_t digdata[] = {0x5f, 0x41, 0x9d, 0xcd, 0xc3, 0xce, 0xde, 0x45, 0xdf, 0xcf};
+const uint8_t digdata[] = {0x5f, 0x41, 0x9d, 0xcd, 0xc3, 0xce, 0xde, 0x45, 0xdf, 0xcf};
+__IO uint8_t leddat[] = {0x00, 0x00, 0x00, 0x00};
 
 __IO uint16_t count = 0;
+__IO uint8_t tim_to_led = 0;
 
 /* USER CODE END PV */
 
@@ -64,83 +65,45 @@ void _init(void)
 {
 }
 
-void Output_Digit(uint8_t dat, __IO uint32_t* brr)
+static void Output_Digit(uint8_t dat, __IO uint32_t* brr)
 {
   LED_DAT_GPIO_Port->BSRR = (LED_DAT_Pin << 16) | ((dat & 0x80) << 1);
-//  if (dat & 0x80) {
-//    LED_DAT_GPIO_Port->BSRR = LED_DAT_Pin;
-//  } else {
-//    LED_DAT_GPIO_Port->BRR = LED_DAT_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x40) << 2);
-//  if (dat & 0x40) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x20) << 3);
-//  if (dat & 0x20) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x10) << 4);
-//  if (dat & 0x10) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x08) << 5);
-//  if (dat & 0x08) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x04) << 6);
-//  if (dat & 0x04) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x02) << 7);
-//  if (dat & 0x02) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
 
-/*  LED_SCK_GPIO_Port->BRR = LED_SCK_Pin; */
   LED_DAT_GPIO_Port->BSRR = ((LED_DAT_Pin | LED_SCK_Pin)<< 16) | ((dat & 0x01) << 8);
-//  if (dat & 0x01) {
-//    GPIOA->BSRR = LED_DAT_Pin | (LED_SCK_Pin << 16);
-//  } else {
-//    GPIOA->BRR = LED_DAT_Pin | LED_SCK_Pin;
-//  }
   LED_SCK_GPIO_Port->BSRR = LED_SCK_Pin;
+
   LED_SCK_GPIO_Port->BRR = LED_SCK_Pin;
 
   *brr = LED_DAT_Pin;
   LED_RCK_GPIO_Port->BSRR = LED_RCK_Pin;
-  LED_RCK_GPIO_Port->BRR = LED_RCK_Pin;
+  LED_RCK_GPIO_Port->BRR  = LED_RCK_Pin;
+}
+
+static void setled(uint16_t d)
+{
+  leddat[0] = digdata[d % 10];
+  leddat[1] = digdata[(d / 10) % 10];
+  leddat[2] = digdata[(d / 100) % 10];
+  leddat[3] = (d < 1000) ? 0x00 : digdata[(d / 1000) % 10];
 }
 
 /* TIM2 : 100Hz Trigger Output from Internal Clock */
@@ -203,59 +166,40 @@ void init_start_led(void)
   Output_Digit(0x00, &LED_DAT_GPIO_Port->BSRR);
   Output_Digit(0x00, &LED_DAT_GPIO_Port->BSRR);
 
-  /* Enable the Output compare channel */
-//  TIM_CCxChannelCmd(TIM2, TIM_CHANNEL_1, TIM_CCx_ENABLE);
-//  TIM_CCxChannelCmd(TIM2, TIM_CHANNEL_2, TIM_CCx_ENABLE);
-//  TIM_CCxChannelCmd(TIM2, TIM_CHANNEL_3, TIM_CCx_ENABLE);
-//  TIM_CCxChannelCmd(TIM2, TIM_CHANNEL_4, TIM_CCx_ENABLE);
-//  TIM2->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E;
+  TIM2_Init();
+  TIM3_Init();
 
-//  TIM2->EGR = TIM_EGR_UG;
-//  __HAL_TIM_CLEAR_FLAG(&htim2, TIM_FLAG_CC2);
-//  __HAL_TIM_CLEAR_FLAG(&htim2, TIM_FLAG_CC3);
-//  __HAL_TIM_CLEAR_FLAG(&htim2, TIM_FLAG_CC4);
-//  __HAL_TIM_CLEAR_FLAG(&htim2, TIM_FLAG_UPDATE);
-  // need some clock...
-//  do {} while ( !(TIM2->SR & TIM_SR_UIF) );
-//  TIM2->SR = ~(TIM_FLAG_CC2 | TIM_FLAG_CC3 | TIM_FLAG_CC4 | TIM_SR_UIF);
-
-//  TIM3->EGR = TIM_EGR_UG;
-//  __HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_UPDATE);
-//  (&htim3)->Instance->SR = ~(TIM_FLAG_UPDATE);
-  // need some clock...
-//  do {} while ( !(TIM3->SR & TIM_SR_UIF) );
-//  TIM3->SR = ~(TIM_SR_UIF);
-
-  /* Enable the Peripheral */
-//  __HAL_TIM_ENABLE(&htim3);
-//  __HAL_TIM_ENABLE(&htim2);
   TIM3->CR1 |= TIM_CR1_CEN;
   TIM2->CR1 |= TIM_CR1_CEN;
 }
 
 void led_drive(void)
 {
-  uint8_t dat;
-
   if (TIM3->SR & TIM_SR_UIF) {
     TIM3->SR = ~(TIM_SR_UIF);
     TIM3->CNT = TIM3->CNT + 10000;
   }
 
+  if (TIM2->SR & TIM_SR_UIF) {
+    TIM2->SR = ~(TIM_SR_UIF);
+    if (tim_to_led) {
+      count = TIM3->CNT;
+      setled(count);
+    }
+  }
+
   if (TIM2->SR & TIM_SR_CC1IF) {
     TIM2->SR = ~(TIM_SR_CC1IF);
-    count = TIM3->CNT;
-    dat = digdata[count % 10];
-     Output_Digit(dat, &LED_DAT_GPIO_Port->BRR);
+     Output_Digit(leddat[0], &LED_DAT_GPIO_Port->BRR);
   } else
   if (TIM2->SR & TIM_SR_CC2IF) {
     TIM2->SR = ~(TIM_SR_CC2IF);
-    dat = digdata[(count / 10) % 10];
-    Output_Digit(dat, &LED_DAT_GPIO_Port->BSRR);
+    Output_Digit(leddat[1], &LED_DAT_GPIO_Port->BSRR);
   } else
   if (TIM2->SR & TIM_SR_CC3IF) {
+    uint8_t dat;
     TIM2->SR = ~(TIM_SR_CC3IF);
-    dat = digdata[(count / 100) % 10];
+    dat = leddat[2];
     if ((count % 100) < 50) {
       dat |= 0x20;
     }
@@ -263,12 +207,7 @@ void led_drive(void)
   } else
   if (TIM2->SR & TIM_SR_CC4IF) {
     TIM2->SR = ~(TIM_SR_CC4IF);
-    if (count < 1000) {
-      dat = 0x00;
-    } else {
-      dat = digdata[(count / 1000) % 10];
-    }
-    Output_Digit(dat, &LED_DAT_GPIO_Port->BSRR);
+    Output_Digit(leddat[3], &LED_DAT_GPIO_Port->BSRR);
   }
 }
 /* USER CODE END 0 */
@@ -290,15 +229,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-//  MX_TIM2_Init();
-//  MX_TIM3_Init();
 
   /* USER CODE BEGIN 2 */
-  TIM2_Init();
-  TIM3_Init();
 
-  init_start_led();
   count = 0;
+  tim_to_led = 1;
+  setled(count);
+  init_start_led();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -48,7 +48,6 @@ CSRC = \
 	Src/main.c \
 	Src/gpio.c \
 	Src/usart2.c \
-	Src/tim.c \
 	Src/stm32f3xx_hal_msp.c \
 	Src/stm32f3xx_it.c \
 	Src/system_stm32f3xx.c \
