@@ -36,6 +36,7 @@
 #include "dac1_tim6_dma.h"
 
 #include "gpio.h"
+#include "string.h"
 
 void DAC1_MspInit(void);
 
