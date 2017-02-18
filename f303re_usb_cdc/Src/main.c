@@ -52,13 +52,13 @@
 #include "uart_serial.h"
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
-DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart1_tx;
+//UART_HandleTypeDef huart1;
+//DMA_HandleTypeDef hdma_usart1_rx;
+//DMA_HandleTypeDef hdma_usart1_tx;
 
-//UART_HandleTypeDef huart2;
-//DMA_HandleTypeDef hdma_usart2_tx;
-//DMA_HandleTypeDef hdma_usart2_rx;
+UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDevice;
@@ -67,8 +67,8 @@ USBD_HandleTypeDef hUsbDevice;
 static void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
-static void MX_USART1_UART_DMA_Init(void);
-//static void MX_USART2_UART_DMA_Init(void);
+//static void MX_USART1_UART_DMA_Init(void);
+static void MX_USART2_UART_DMA_Init(void);
 
 int main(void)
 {
@@ -85,11 +85,11 @@ int main(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
-  MX_USART1_UART_DMA_Init();
-//  MX_USART2_UART_DMA_Init();
+//  MX_USART1_UART_DMA_Init();
+  MX_USART2_UART_DMA_Init();
 
-//  uart_serial_init(&huart2);
-//  printf("Nucleo F303R\n");
+  uart_serial_init(&huart2);
+  printf("Nucleo F303R\n");
 
   /* Init Device Library,Add Supported Class and Start the library*/
   USBD_Init(&hUsbDevice, &FS_Desc, DEVICE_FS);
@@ -165,6 +165,7 @@ static void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+#if 0
 /* USART1 init function */
 static void MX_USART1_UART_DMA_Init(void)
 {
@@ -193,8 +194,9 @@ static void MX_USART1_UART_DMA_Init(void)
   }
 
 }
+#endif
 
-#if 0
+#if 1
 /* USART2 init function */
 static void MX_USART2_UART_DMA_Init(void)
 {

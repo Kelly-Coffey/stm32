@@ -44,10 +44,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_hal.h"
 
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern DMA_HandleTypeDef hdma_usart1_tx;
-//extern DMA_HandleTypeDef hdma_usart2_tx;
-//extern DMA_HandleTypeDef hdma_usart2_rx;
+//extern DMA_HandleTypeDef hdma_usart1_rx;
+//extern DMA_HandleTypeDef hdma_usart1_tx;
+extern DMA_HandleTypeDef hdma_usart2_tx;
+extern DMA_HandleTypeDef hdma_usart2_rx;
 
 extern void Error_Handler(void);
 
@@ -90,11 +90,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct;
+#if 0
   if(huart->Instance==USART1)
   {
     /* Peripheral clock enable */
     __HAL_RCC_USART1_CLK_ENABLE();
-  
     /**USART1 GPIO Configuration    
     PC4     ------> USART1_TX
     PA10     ------> USART1_RX 
@@ -148,8 +148,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_NVIC_SetPriority(USART1_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   }
-#if 0
-  else if(huart->Instance==USART2)
+  else 
+#endif
+#if 1
+  if(huart->Instance==USART2)
   {
     /* Peripheral clock enable */
     __HAL_RCC_USART2_CLK_ENABLE();
@@ -205,6 +207,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 {
+#if 0
   if(huart->Instance==USART1)
   {
     /* Peripheral clock disable */
@@ -224,8 +227,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     /* Peripheral interrupt DeInit*/
     HAL_NVIC_DisableIRQ(USART1_IRQn);
   }
-#if 0
-  else if(huart->Instance==USART2)
+  else
+#endif
+#if 1
+  if(huart->Instance==USART2)
   {
     /* Peripheral clock disable */
     __HAL_RCC_USART2_CLK_DISABLE();
