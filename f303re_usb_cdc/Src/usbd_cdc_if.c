@@ -58,7 +58,7 @@ USBD_CDC_LineCodingTypeDef LineCoding =
 
 uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
-uint8_t TxReadPtr;
+uint32_t TxReadPtr;
 
 extern UART_HandleTypeDef huart1;
 
