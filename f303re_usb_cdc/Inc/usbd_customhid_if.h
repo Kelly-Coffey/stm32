@@ -53,12 +53,6 @@
 #include "usbd_customhid.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-// DAP Port
-#define DAP_PORT_AUTODETECT             0       // Autodetect Port
-#define DAP_PORT_DISABLED               0       // Port Disabled (I/O pins in High-Z)
-#define DAP_PORT_SWD                    1       // SWD Port (SWCLK, SWDIO) + nRESET
-
-
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 extern USBD_CUSTOM_HID_ItfTypeDef USBD_CustomHID_fops;

@@ -40,8 +40,8 @@ STM32_INCLUDES = \
 	-IMiddlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Inc \
 	-IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
 
-#OPTIMIZE = -Os
-OPTIMIZE = -gdwarf-2 -O0 -flto-partition=none -fipa-sra
+OPTIMIZE = -Os
+#OPTIMIZE = -gdwarf-2 -O0 -flto-partition=none -fipa-sra
 
 CFLAGS  = $(MCFLAGS) $(OPTIMIZE) $(NANOLIB) $(SEMIHOST_LIB) $(DEFS) $(STM32_INCLUDES)
 CFLAGS += -Wl,-T,STM32F303RETx_FLASH.ld
