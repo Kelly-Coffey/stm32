@@ -29,50 +29,6 @@
 #include "usbd_ctlreq.h"
 #include "usbd_ioreq.h"
 
-
-/** @addtogroup STM32_USBD_STATE_DEVICE_LIBRARY
-  * @{
-  */
-
-
-/** @defgroup USBD_REQ 
-  * @brief USB standard requests module
-  * @{
-  */ 
-
-/** @defgroup USBD_REQ_Private_TypesDefinitions
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_REQ_Private_Defines
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_REQ_Private_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_REQ_Private_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-
 /** @defgroup USBD_REQ_Private_FunctionPrototypes
   * @{
   */ 
@@ -98,16 +54,6 @@ static void USBD_ClrFeature(USBD_HandleTypeDef *pdev ,
                             USBD_SetupReqTypedef *req);
 
 static uint8_t USBD_GetLen(uint8_t *buf);
-
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_REQ_Private_Functions
-  * @{
-  */ 
-
 
 /**
 * @brief  USBD_StdDevReq
@@ -142,7 +88,6 @@ USBD_StatusTypeDef  USBD_StdDevReq (USBD_HandleTypeDef *pdev , USBD_SetupReqType
   case USB_REQ_GET_STATUS:                                  
     USBD_GetStatus (pdev , req);
     break;
-    
     
   case USB_REQ_SET_FEATURE:   
     USBD_SetFeature (pdev , req);    
@@ -337,11 +282,6 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
     
   switch (req->wValue >> 8)
   { 
-#if (USBD_LPM_ENABLED == 1)
-  case USB_DESC_TYPE_BOS:
-    pbuf = pdev->pDesc->GetBOSDescriptor(pdev->dev_speed, &len);
-    break;
-#endif    
   case USB_DESC_TYPE_DEVICE:
     pbuf = pdev->pDesc->GetDeviceDescriptor(pdev->dev_speed, &len);
     break;
@@ -387,13 +327,8 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
       break;
       
     default:
-#if (USBD_SUPPORT_USER_STRING == 1)
-      pbuf = pdev->pClass->GetUsrStrDescriptor(pdev, (req->wValue) , &len);
-      break;
-#else      
        USBD_CtlError(pdev , req);
       return;
-#endif   
     }
     break;
   case USB_DESC_TYPE_DEVICE_QUALIFIER:                   
@@ -410,13 +345,6 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
     } 
 
   case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
-    if(pdev->dev_speed == USBD_SPEED_HIGH  )   
-    {
-      pbuf   = (uint8_t *)pdev->pClass->GetOtherSpeedConfigDescriptor(&len);
-      pbuf[1] = USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION;
-      break; 
-    }
-    else
     {
       USBD_CtlError(pdev , req);
       return;
@@ -765,18 +693,5 @@ static uint8_t USBD_GetLen(uint8_t *buf)
 
     return len;
 }
-/**
-  * @}
-  */ 
-
-
-/**
-  * @}
-  */ 
-
-
-/**
-  * @}
-  */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

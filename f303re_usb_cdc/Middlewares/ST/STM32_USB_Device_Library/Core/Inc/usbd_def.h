@@ -29,25 +29,8 @@
 #ifndef __USBD_DEF_H
 #define __USBD_DEF_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_conf.h"
-
-/** @addtogroup STM32_USBD_DEVICE_LIBRARY
-  * @{
-  */
-  
-/** @defgroup USB_DEF
-  * @brief general defines for the usb device library file
-  * @{
-  */ 
-
-/** @defgroup USB_DEF_Exported_Defines
-  * @{
-  */ 
 
 #ifndef NULL
 #define NULL  0
@@ -135,16 +118,6 @@
 #define USBD_EP_TYPE_BULK                                 2
 #define USBD_EP_TYPE_INTR                                 3
 
-
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_DEF_Exported_TypesDefinitions
-  * @{
-  */
-
 typedef  struct  usb_setup_req 
 {
     
@@ -175,11 +148,7 @@ typedef struct _Device_cb
   uint8_t  *(*GetHSConfigDescriptor)(uint16_t *length); 
   uint8_t  *(*GetFSConfigDescriptor)(uint16_t *length);   
   uint8_t  *(*GetOtherSpeedConfigDescriptor)(uint16_t *length);
-  uint8_t  *(*GetDeviceQualifierDescriptor)(uint16_t *length);
-#if (USBD_SUPPORT_USER_STRING == 1)
-  uint8_t  *(*GetUsrStrDescriptor)(struct _USBD_HandleTypeDef *pdev ,uint8_t index,  uint16_t *length);   
-#endif  
-  
+  uint8_t  *(*GetDeviceQualifierDescriptor)(uint16_t *length);  
 } USBD_ClassTypeDef;
 
 /* Following USB Device Speed */
@@ -207,9 +176,6 @@ typedef struct
   uint8_t  *(*GetSerialStrDescriptor)( USBD_SpeedTypeDef speed , uint16_t *length);  
   uint8_t  *(*GetConfigurationStrDescriptor)( USBD_SpeedTypeDef speed , uint16_t *length);  
   uint8_t  *(*GetInterfaceStrDescriptor)( USBD_SpeedTypeDef speed , uint16_t *length); 
-#if (USBD_LPM_ENABLED == 1)
-  uint8_t  *(*GetBOSDescriptor)( USBD_SpeedTypeDef speed , uint16_t *length); 
-#endif  
 } USBD_DescriptorsTypeDef;
 
 /* USB Device handle structure */
@@ -248,11 +214,6 @@ typedef struct _USBD_HandleTypeDef
   void                    *pData;    
 } USBD_HandleTypeDef;
 
-/**
-  * @}
-  */ 
-
-
 
 /** @defgroup USBD_DEF_Exported_Macros
   * @{
@@ -274,57 +235,7 @@ typedef struct _USBD_HandleTypeDef
     #define __packed __attribute__((__packed__))
   #endif /* __packed */
 #endif /* __GNUC__ */
-
-
-/* In HS mode and when the DMA is used, all variables and data structures dealing
-   with the DMA during the transaction process should be 4-bytes aligned */    
-
-#if defined   (__GNUC__)        /* GNU Compiler */
-  #define __ALIGN_END    __attribute__ ((aligned (4)))
-  #define __ALIGN_BEGIN         
-#else                           
-  #define __ALIGN_END
-  #if defined   (__CC_ARM)      /* ARM Compiler */
-    #define __ALIGN_BEGIN    __align(4)  
-  #elif defined (__ICCARM__)    /* IAR Compiler */
-    #define __ALIGN_BEGIN 
-  #elif defined  (__TASKING__)  /* TASKING Compiler */
-    #define __ALIGN_BEGIN    __align(4) 
-  #endif /* __CC_ARM */  
-#endif /* __GNUC__ */ 
   
-
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_DEF_Exported_Variables
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_DEF_Exported_FunctionsPrototype
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* __USBD_DEF_H */
 
-/**
-  * @}
-  */ 
-
-/**
-* @}
-*/ 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

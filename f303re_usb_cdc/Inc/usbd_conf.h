@@ -44,9 +44,7 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USBD_CONF__H__
 #define __USBD_CONF__H__
-#ifdef __cplusplus
- extern "C" {
-#endif
+
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,40 +53,15 @@
 #include "stm32f3xx_hal.h"
 #include "usbd_def.h"
 
-/** @addtogroup USBD_OTG_DRIVER
-  * @{
-  */
-  
-/** @defgroup USBD_CONF
-  * @brief usb otg low level driver configuration file
-  * @{
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Defines
-  * @{
-  */ 
-
-/*---------- -----------*/
-#define USBD_MAX_NUM_INTERFACES     1
-/*---------- -----------*/
-#define USBD_MAX_NUM_CONFIGURATION     1
-/*---------- -----------*/
-#define USBD_MAX_STR_DESC_SIZ     512
-/*---------- -----------*/
+#define USBD_MAX_NUM_INTERFACES      1
+#define USBD_MAX_NUM_CONFIGURATION   1
+#define USBD_MAX_STR_DESC_SIZ      512
 #define USBD_SUPPORT_USER_STRING     0
-/*---------- -----------*/
-#define USBD_DEBUG_LEVEL     0
-/*---------- -----------*/
-#define USBD_SELF_POWERED     1
-/*---------- -----------*/
-#define USBD_CDC_INTERVAL     1000
-/****************************************/
+#define USBD_DEBUG_LEVEL             0
+#define USBD_SELF_POWERED            1
+
 /* #define for FS and HS identification */
 #define DEVICE_FS 		0
-
-/** @defgroup USBD_Exported_Macros
-  * @{
-  */ 
 
 /* Memory management macros */  
 #define USBD_malloc               (uint32_t *)USBD_static_malloc
@@ -130,55 +103,7 @@ void USBD_static_free(void *p);
 #define USBD_DbgLog(...)                         
 #endif
                             
-/**
-  * @}
-  */ 
- 
-    
-    
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Types
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_FunctionsPrototype
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-#ifdef __cplusplus
-}
-#endif
-
 #endif /*__USBD_CONF__H__*/
 
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

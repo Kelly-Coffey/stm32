@@ -35,10 +35,6 @@
 #ifndef __STM32F3xx_IT_H
 #define __STM32F3xx_IT_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif 
-
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -46,15 +42,14 @@
 /* Exported functions ------------------------------------------------------- */
 
 void SysTick_Handler(void);
+void DMA1_Channel4_IRQHandler(void);
+void DMA1_Channel5_IRQHandler(void);
 void DMA1_Channel6_IRQHandler(void);
 void DMA1_Channel7_IRQHandler(void);
 void USB_LP_CAN_RX0_IRQHandler(void);
 void TIM3_IRQHandler(void);
 void USART2_IRQHandler(void);
-
-#ifdef __cplusplus
-}
-#endif
+void USART1_IRQHandler(void);
 
 #endif /* __STM32F3xx_IT_H */
 

@@ -35,10 +35,6 @@
 #include "stm32f3xx.h"
 #include "stm32f3xx_it.h"
 
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern TIM_HandleTypeDef htim3;
@@ -69,13 +65,12 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
 
-#if 0
 /**
 * @brief This function handles DMA1 channel4 global interrupt.
 */
 void DMA1_Channel4_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(&hdma_usart1_tx);
+//  HAL_DMA_IRQHandler(&hdma_usart1_tx);
 }
 
 /**
@@ -83,11 +78,9 @@ void DMA1_Channel4_IRQHandler(void)
 */
 void DMA1_Channel5_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+//  HAL_DMA_IRQHandler(&hdma_usart1_rx);
 }
-#endif
 
-#if 1
 /**
 * @brief This function handles DMA1 channel6 global interrupt.
 */
@@ -103,7 +96,6 @@ void DMA1_Channel7_IRQHandler(void)
 {
   HAL_DMA_IRQHandler(&hdma_usart2_tx);
 }
-#endif
 
 /**
 * @brief This function handles USB low priority or CAN_RX0 interrupts.
@@ -121,17 +113,14 @@ void TIM3_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim3);
 }
 
-#if 0
 /**
 * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
 */
 void USART1_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&huart1);
+//  HAL_UART_IRQHandler(&huart1);
 }
-#endif
 
-#if 1
 /**
 * @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.
 */
@@ -139,6 +128,5 @@ void USART2_IRQHandler(void)
 {
   HAL_UART_IRQHandler(&huart2);
 }
-#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

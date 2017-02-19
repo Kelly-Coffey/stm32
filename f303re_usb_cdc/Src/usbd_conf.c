@@ -54,13 +54,9 @@
 PCD_HandleTypeDef hpcd_USB_FS;
 void Error_Handler(void);
 
-/* USER CODE BEGIN 0 */
-/* USER CODE END 0 */
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-/* USER CODE BEGIN 1 */
-/* USER CODE END 1 */
 void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state);
 
 /*******************************************************************************
@@ -70,39 +66,24 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state);
 
 void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 {
-  if(pcdHandle->Instance==USB)
   {
-  /* USER CODE BEGIN USB_MspInit 0 */
-
-  /* USER CODE END USB_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_USB_CLK_ENABLE();
 
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(USB_LP_CAN_RX0_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQn);
-  /* USER CODE BEGIN USB_MspInit 1 */
-
-  /* USER CODE END USB_MspInit 1 */
   }
 }
 
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 {
-  if(pcdHandle->Instance==USB)
   {
-  /* USER CODE BEGIN USB_MspDeInit 0 */
-
-  /* USER CODE END USB_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USB_CLK_DISABLE();
 
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(USB_LP_CAN_RX0_IRQn);
-
-  /* USER CODE BEGIN USB_MspDeInit 1 */
-
-  /* USER CODE END USB_MspDeInit 1 */
   }
 }
 
@@ -155,20 +136,8 @@ void HAL_PCD_SOFCallback(PCD_HandleTypeDef *hpcd)
   */
 void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd)
 { 
-  USBD_SpeedTypeDef speed = USBD_SPEED_FULL;
-
   /*Set USB Current Speed*/
-  switch (hpcd->Init.speed)
-  {
-  case PCD_SPEED_FULL:
-    speed = USBD_SPEED_FULL;    
-    break;
-	
-  default:
-    speed = USBD_SPEED_FULL;    
-    break;    
-  }
-  USBD_LL_SetSpeed((USBD_HandleTypeDef*)hpcd->pData, speed);  
+  USBD_LL_SetSpeed((USBD_HandleTypeDef*)hpcd->pData, USBD_SPEED_FULL);  
   
   /*Reset Device*/
   USBD_LL_Reset((USBD_HandleTypeDef*)hpcd->pData);
@@ -267,12 +236,12 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   pdev->pData = &hpcd_USB_FS;
 
   hpcd_USB_FS.Instance = USB;
-  hpcd_USB_FS.Init.dev_endpoints = 8;
-  hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
-  hpcd_USB_FS.Init.ep0_mps = DEP0CTL_MPS_64;
-  hpcd_USB_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
-  hpcd_USB_FS.Init.low_power_enable = DISABLE;
-  hpcd_USB_FS.Init.lpm_enable = DISABLE;
+  hpcd_USB_FS.Init.dev_endpoints           = 8;
+  hpcd_USB_FS.Init.speed                   = PCD_SPEED_FULL;
+  hpcd_USB_FS.Init.ep0_mps                 = DEP0CTL_MPS_64;
+  hpcd_USB_FS.Init.phy_itface              = PCD_PHY_EMBEDDED;
+  hpcd_USB_FS.Init.low_power_enable        = DISABLE;
+  hpcd_USB_FS.Init.lpm_enable              = DISABLE;
   hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
   if (HAL_PCD_Init(&hpcd_USB_FS) != HAL_OK)
   {
@@ -735,7 +704,6 @@ void USBD_static_free(void *p)
 */
 void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state)
 {
-/* USER CODE BEGIN 4 */
   if (state == 1)
   {
     /* Configure Low Connection State */
@@ -746,7 +714,6 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state)
     /* Configure High Connection State */
    
   } 
-/* USER CODE END 4 */
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -29,26 +29,9 @@
 #ifndef __USB_CDC_H
 #define __USB_CDC_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include  "usbd_ioreq.h"
 
-/** @addtogroup STM32_USB_DEVICE_LIBRARY
-  * @{
-  */
-  
-/** @defgroup usbd_cdc
-  * @brief This file is the Header file for usbd_cdc.c
-  * @{
-  */ 
-
-
-/** @defgroup usbd_cdc_Exported_Defines
-  * @{
-  */ 
 #define CDC_IN_EP                                   0x81  /* EP1 for data IN */
 #define CDC_OUT_EP                                  0x01  /* EP1 for data OUT */
 #define CDC_CMD_EP                                  0x82  /* EP2 for CDC commands */
@@ -78,18 +61,6 @@
 #define CDC_SET_CONTROL_LINE_STATE                  0x22
 #define CDC_SEND_BREAK                              0x23
 
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_CORE_Exported_TypesDefinitions
-  * @{
-  */
-
-/**
-  * @}
-  */ 
 typedef struct
 {
   uint32_t bitrate;
@@ -123,29 +94,9 @@ typedef struct
 }
 USBD_CDC_HandleTypeDef; 
 
-
-
-/** @defgroup USBD_CORE_Exported_Macros
-  * @{
-  */ 
-  
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CORE_Exported_Variables
-  * @{
-  */ 
-
 extern USBD_ClassTypeDef  USBD_CDC;
 #define USBD_CDC_CLASS    &USBD_CDC
-/**
-  * @}
-  */ 
 
-/** @defgroup USB_CORE_Exported_Functions
-  * @{
-  */
 uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev, 
                                       USBD_CDC_ItfTypeDef *fops);
 
@@ -159,21 +110,7 @@ uint8_t  USBD_CDC_SetRxBuffer        (USBD_HandleTypeDef   *pdev,
 uint8_t  USBD_CDC_ReceivePacket      (USBD_HandleTypeDef *pdev);
 
 uint8_t  USBD_CDC_TransmitPacket     (USBD_HandleTypeDef *pdev);
-/**
-  * @}
-  */ 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  /* __USB_CDC_H */
-/**
-  * @}
-  */ 
 
-/**
-  * @}
-  */ 
-  
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
