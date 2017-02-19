@@ -1,12 +1,15 @@
 /**
   ******************************************************************************
-  * @file           : usbd_conf.h
-  * @version        : v1.0_Cube
-  * @brief          : Header for usbd_conf file.
+  * @file    USB_Device/CustomHID_Standalone/Inc/usbd_customhid_if.h
+  * @author  MCD Application Team
+  * @version V1.7.0
+  * @date    16-December-2016
+  * @brief   Header for usbd_customhid_if.c file.
   ******************************************************************************
+  * @attention
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics International N.V. 
+  * All rights reserved.</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without 
   * modification, are permitted, provided that the following conditions are met:
@@ -40,73 +43,26 @@
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
-*/
+  */ 
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBD_CONF__H__
-#define __USBD_CONF__H__
+#ifndef __USBD_CUSTOMHID_IF_H
+#define __USBD_CUSTOMHID_IF_H
 
 /* Includes ------------------------------------------------------------------*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "stm32f3xx.h"
-#include "stm32f3xx_hal.h"
-#include "usbd_def.h"
+#include "usbd_customhid.h"
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+// DAP Port
+#define DAP_PORT_AUTODETECT             0       // Autodetect Port
+#define DAP_PORT_DISABLED               0       // Port Disabled (I/O pins in High-Z)
+#define DAP_PORT_SWD                    1       // SWD Port (SWCLK, SWDIO) + nRESET
 
-#define USBD_MAX_NUM_INTERFACES      1
-#define USBD_MAX_NUM_CONFIGURATION   1
-#define USBD_MAX_STR_DESC_SIZ      512
-#define USBD_SUPPORT_USER_STRING     0
-#define USBD_DEBUG_LEVEL             0
-#define USBD_SELF_POWERED            1
 
-#define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE     64
-#define USBD_DAP_REPORT_DESC_SIZE   33
+/* Exported macro ------------------------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
+extern USBD_CUSTOM_HID_ItfTypeDef USBD_CustomHID_fops;
 
-/* #define for FS and HS identification */
-#define DEVICE_FS 		0
-
-/* Memory management macros */  
-#define USBD_malloc               (uint32_t *)USBD_static_malloc
-#define USBD_free                 USBD_static_free
-#define USBD_memset               /* Not used */
-#define USBD_memcpy               /* Not used */
-
-#define USBD_Delay   HAL_Delay
-
-/* For footprint reasons and since only one allocation is handled in the HID class
-   driver, the malloc/free is changed into a static allocation method */
-void *USBD_static_malloc(uint32_t size);
-void USBD_static_free(void *p);    
-
-/* DEBUG macros */    
-#if (USBD_DEBUG_LEVEL > 0)
-#define  USBD_UsrLog(...)   printf(__VA_ARGS__);\
-                            printf("\n");
-#else
-#define USBD_UsrLog(...)   
-#endif 
-                            
-                            
-#if (USBD_DEBUG_LEVEL > 1)
-
-#define  USBD_ErrLog(...)   printf("ERROR: ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
-#else
-#define USBD_ErrLog(...)   
-#endif 
-                            
-                            
-#if (USBD_DEBUG_LEVEL > 2)                         
-#define  USBD_DbgLog(...)   printf("DEBUG : ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
-#else
-#define USBD_DbgLog(...)                         
-#endif
-                            
-#endif /*__USBD_CONF__H__*/
+#endif /* __USBD_CUSTOMHID_IF_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

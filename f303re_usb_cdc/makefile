@@ -37,6 +37,7 @@ STM32_INCLUDES = \
 	-IDrivers/STM32F3xx_HAL_Driver/Inc/Legacy \
 	-IDrivers/STM32F3xx_HAL_Driver/Inc \
 	-IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
+	-IMiddlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Inc \
 	-IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
 
 #OPTIMIZE = -Os
@@ -50,6 +51,7 @@ CSRC = \
 	$(wildcard Src/*.c) \
 	$(wildcard Drivers/STM32F3xx_HAL_Driver/Src/*.c) \
 	$(wildcard Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.c) \
+	$(wildcard Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src/*.c) \
 	$(wildcard Middlewares/ST/STM32_USB_Device_Library/Core/Src/*.c)
 
 ASRC = startup/startup_stm32f303xe.s
