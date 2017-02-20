@@ -230,31 +230,34 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @param  htim: TIM handle
   * @retval None
   */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback_(TIM_HandleTypeDef *htim)
 {
   uint32_t buffsize;
   uint32_t writeptr = DMA_WRITE_PTR;
 
-  if (TxReadPtr != writeptr)
+  if (htim->Instance==TIM3)
   {
-    if (TxReadPtr > writeptr)
+    if (TxReadPtr != writeptr)
     {
-      buffsize = APP_TX_DATA_SIZE - TxReadPtr;
-    }
-    else
-    {
-      buffsize = writeptr - TxReadPtr;
-    }
+      if (TxReadPtr > writeptr)
+      {
+        buffsize = APP_TX_DATA_SIZE - TxReadPtr;
+      }
+      else
+      {
+        buffsize = writeptr - TxReadPtr;
+      }
 
-    USBD_CDC_SetTxBuffer(&hUsbDevice, (uint8_t*)&UserTxBufferFS[TxReadPtr], buffsize);
+      USBD_CDC_SetTxBuffer(&hUsbDevice, (uint8_t*)&UserTxBufferFS[TxReadPtr], buffsize);
 
     
-    if(USBD_CDC_TransmitPacket(&hUsbDevice) == USBD_OK)
-    {
-      TxReadPtr += buffsize;
-      if (TxReadPtr == APP_RX_DATA_SIZE)
+      if(USBD_CDC_TransmitPacket(&hUsbDevice) == USBD_OK)
       {
-        TxReadPtr = 0;
+        TxReadPtr += buffsize;
+        if (TxReadPtr == APP_RX_DATA_SIZE)
+        {
+          TxReadPtr = 0;
+        }
       }
     }
   }

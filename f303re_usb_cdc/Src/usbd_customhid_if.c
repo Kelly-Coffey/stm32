@@ -47,8 +47,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_customhid_if.h"
-#include "main.h"
-#include "uart_serial.h"
 #include "DAP.h"
 
 /* Private typedef -----------------------------------------------------------*/

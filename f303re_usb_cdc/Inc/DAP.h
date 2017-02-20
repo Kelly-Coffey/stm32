@@ -136,8 +136,8 @@
 #define DP_RESEND                       0x08    // Resend (SW Read Only)
 #define DP_RDBUFF                       0x0C    // Read Buffer (Read Only)
 
-#include "stddef.h"
-#include "stdint.h"
+//#include "stddef.h"
+//#include "stdint.h"
 
 // DAP Data structure
 typedef struct {
@@ -163,8 +163,6 @@ extern volatile uint8_t    DAP_TransferAbort;   // Transfer Abort Flag
 // Functions
 extern void     SWJ_Sequence    (uint32_t count, uint8_t *data);
 extern uint8_t  SWD_Transfer    (uint32_t request, uint32_t *data);
-
-extern void     Delayms         (uint32_t delay);
 
 extern uint32_t DAP_ProcessVendorCommand (uint8_t *request, uint8_t *response);
 

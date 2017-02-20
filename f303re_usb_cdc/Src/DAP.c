@@ -23,7 +23,6 @@
 #include "main.h"
 #include "string.h"
 #include "DAP.h"
-#include "stdio.h"
 
 #define DAP_FW_VER      "1.0"   // Firmware Version
 
@@ -31,8 +30,8 @@
 #define IO_PORT_WRITE_CYCLES  2 ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
 #define DAP_DEFAULT_SWJ_CLOCK 5000000         ///< Default SWD/JTAG clock frequency in Hz.
 
-#define DAP_PACKET_SIZE  64
-#define DAP_PACKET_COUNT  1
+#define DAP_PACKET_SIZE       64
+#define DAP_PACKET_COUNT      1
 
 #define MAX_SWJ_CLOCK(delay_cycles) \
   (CPU_CLOCK/2 / (IO_PORT_WRITE_CYCLES + delay_cycles))
@@ -184,6 +183,7 @@ static  void     PIN_SWDIO_OUT_DISABLE(void)
 */
 static  uint32_t PIN_nRESET_IN(void)
 {
+  return 1;
 }
 
 /** nRESET I/O pin: Set Output.
@@ -193,18 +193,6 @@ static  uint32_t PIN_nRESET_IN(void)
 */
 static  void     PIN_nRESET_OUT(uint32_t bit)
 {
-}
-
-/** Reset Target Device with custom specific I/O pin or command sequence.
-This function allows the optional implementation of a device specific reset sequence.
-It is called when the command \ref DAP_ResetTarget and is for example required
-when a device needs a time-critical unlock sequence that enables the debug port.
-\return 0 = no device specific reset sequence is implemented.\n
-        1 = a device specific reset sequence is implemented.
-*/
-static  uint32_t RESET_TARGET(void)
-{
-    return (0);              // change to '1' when a device reset sequence is implemented
 }
 
 // Get DAP Information
@@ -271,31 +259,6 @@ static inline uint32_t TIMER_EXPIRED (void) {
   return ((TIM6->CR1 & TIM_CR1_CEN) ? 0 : 1);
 }
 
-// Delay for specified time
-//    delay:  delay time in ms
-void Delayms(uint32_t delay)
-{
-  delay *= (CPU_CLOCK/1000 + (DELAY_SLOW_CYCLES-1)) / DELAY_SLOW_CYCLES;
-  PIN_DELAY_SLOW(delay);
-}
-
-// Process Delay command and prepare response
-//   request:  pointer to request data
-//   response: pointer to response data
-//   return:   number of bytes in response
-static uint32_t DAP_Delay(uint8_t *request, uint8_t *response)
-{
-  uint32_t delay;
-
-  delay  = *(request+0) | (*(request+1) << 8);
-  delay *= (CPU_CLOCK/1000000 + (DELAY_SLOW_CYCLES-1)) / DELAY_SLOW_CYCLES;
-
-  PIN_DELAY_SLOW(delay);
-
-  *response = DAP_OK;
-  return (1);
-}
-
 // Process Host Status command and prepare response
 //   request:  pointer to request data
 //   response: pointer to response data
@@ -351,24 +314,12 @@ static uint32_t DAP_Connect(uint8_t *request, uint8_t *response)
 //   return:   number of bytes in response
 static uint32_t DAP_Disconnect(uint8_t *response)
 {
-
   DAP_Data.debug_port = DAP_PORT_DISABLED;
+
   PORT_OFF();
 
   *response = DAP_OK;
   return (1);
-}
-
-// Process Reset Target command and prepare response
-//   request:  pointer to request data
-//   response: pointer to response data
-//   return:   number of bytes in response
-static uint32_t DAP_ResetTarget(uint8_t *response)
-{
-
-  *(response+1) = RESET_TARGET();
-  *(response+0) = DAP_OK;
-  return (2);
 }
 
 // Process SWJ Pins command and prepare response
@@ -821,7 +772,8 @@ end:
 //   request:  pointer to request data
 //   response: pointer to response data
 //   return:   number of bytes in response
-__weak uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
+// this function is declared as __weak in DAP.c
+uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
 {
   *response = ID_DAP_Invalid;
   return (1);
@@ -855,32 +807,6 @@ uint32_t DAP_ProcessCommand(uint8_t *request, uint8_t *response)
     case ID_DAP_Disconnect:
       num = DAP_Disconnect(response);
       break;
-    case ID_DAP_Delay:
-      num = DAP_Delay(request, response);
-      break;
-    case ID_DAP_ResetTarget:
-      num = DAP_ResetTarget(response);
-      break;
-
-    case ID_DAP_SWJ_Pins:
-      num = DAP_SWJ_Pins(request, response);
-      break;
-    case ID_DAP_SWJ_Clock:
-      num = DAP_SWJ_Clock(request, response);
-      break;
-    case ID_DAP_SWJ_Sequence:
-      num = DAP_SWJ_Sequence(request, response);
-      break;
-
-    case ID_DAP_SWD_Configure:
-      num = DAP_SWD_Configure(request, response);
-      break;
-
-    case ID_DAP_JTAG_Sequence:
-    case ID_DAP_JTAG_Configure:
-    case ID_DAP_JTAG_IDCODE:
-      *response = DAP_ERROR;
-      return (2);
 
     case ID_DAP_TransferConfigure:
       num = DAP_TransferConfigure(request, response);
@@ -923,6 +849,19 @@ uint32_t DAP_ProcessCommand(uint8_t *request, uint8_t *response)
           *response = DAP_ERROR;
           return (2);
       }
+      break;
+
+    case ID_DAP_SWJ_Pins:
+      num = DAP_SWJ_Pins(request, response);
+      break;
+    case ID_DAP_SWJ_Clock:
+      num = DAP_SWJ_Clock(request, response);
+      break;
+    case ID_DAP_SWJ_Sequence:
+      num = DAP_SWJ_Sequence(request, response);
+      break;
+    case ID_DAP_SWD_Configure:
+      num = DAP_SWD_Configure(request, response);
       break;
 
     default:

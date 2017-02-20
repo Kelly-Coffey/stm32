@@ -420,22 +420,6 @@ static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev,
   uint8_t ret = 0;
   USBD_CDC_HandleTypeDef   *hcdc;
   
-  if(pdev->dev_speed == USBD_SPEED_HIGH  ) 
-  {  
-    /* Open EP IN */
-    USBD_LL_OpenEP(pdev,
-                   CDC_IN_EP,
-                   USBD_EP_TYPE_BULK,
-                   CDC_DATA_HS_IN_PACKET_SIZE);
-    
-    /* Open EP OUT */
-    USBD_LL_OpenEP(pdev,
-                   CDC_OUT_EP,
-                   USBD_EP_TYPE_BULK,
-                   CDC_DATA_HS_OUT_PACKET_SIZE);
-    
-  }
-  else
   {
     /* Open EP IN */
     USBD_LL_OpenEP(pdev,
@@ -473,15 +457,6 @@ static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev,
     hcdc->TxState =0;
     hcdc->RxState =0;
        
-    if(pdev->dev_speed == USBD_SPEED_HIGH  ) 
-    {      
-      /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev,
-                             CDC_OUT_EP,
-                             hcdc->RxBuffer,
-                             CDC_DATA_HS_OUT_PACKET_SIZE);
-    }
-    else
     {
       /* Prepare Out endpoint to receive next packet */
       USBD_LL_PrepareReceive(pdev,
@@ -791,15 +766,6 @@ uint8_t  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
   /* Suspend or Resume USB Out process */
   if(pdev->pClassData != NULL)
   {
-    if(pdev->dev_speed == USBD_SPEED_HIGH  ) 
-    {      
-      /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev,
-                             CDC_OUT_EP,
-                             hcdc->RxBuffer,
-                             CDC_DATA_HS_OUT_PACKET_SIZE);
-    }
-    else
     {
       /* Prepare Out endpoint to receive next packet */
       USBD_LL_PrepareReceive(pdev,

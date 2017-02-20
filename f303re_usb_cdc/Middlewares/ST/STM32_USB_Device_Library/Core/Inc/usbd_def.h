@@ -120,7 +120,6 @@
 
 typedef  struct  usb_setup_req 
 {
-    
     uint8_t   bmRequest;                      
     uint8_t   bRequest;                           
     uint16_t  wValue;                             
@@ -215,9 +214,6 @@ typedef struct _USBD_HandleTypeDef
 } USBD_HandleTypeDef;
 
 
-/** @defgroup USBD_DEF_Exported_Macros
-  * @{
-  */ 
 #define  SWAPBYTE(addr)        (((uint16_t)(*((uint8_t *)(addr)))) + \
                                (((uint16_t)(*(((uint8_t *)(addr)) + 1))) << 8))
 

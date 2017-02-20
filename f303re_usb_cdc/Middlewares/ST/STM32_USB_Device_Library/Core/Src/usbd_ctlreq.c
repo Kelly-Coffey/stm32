@@ -286,17 +286,9 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
     pbuf = pdev->pDesc->GetDeviceDescriptor(pdev->dev_speed, &len);
     break;
     
-  case USB_DESC_TYPE_CONFIGURATION:     
-    if(pdev->dev_speed == USBD_SPEED_HIGH )   
-    {
-      pbuf   = (uint8_t *)pdev->pClass->GetHSConfigDescriptor(&len);
-      pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-    }
-    else
-    {
-      pbuf   = (uint8_t *)pdev->pClass->GetFSConfigDescriptor(&len);
-      pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-    }
+  case USB_DESC_TYPE_CONFIGURATION:
+    pbuf   = (uint8_t *)pdev->pClass->GetFSConfigDescriptor(&len);
+    pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
     break;
     
   case USB_DESC_TYPE_STRING:
@@ -332,23 +324,12 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
     }
     break;
   case USB_DESC_TYPE_DEVICE_QUALIFIER:                   
-
-    if(pdev->dev_speed == USBD_SPEED_HIGH  )   
-    {
-      pbuf   = (uint8_t *)pdev->pClass->GetDeviceQualifierDescriptor(&len);
-      break;
-    }
-    else
-    {
-      USBD_CtlError(pdev , req);
-      return;
-    } 
+    USBD_CtlError(pdev , req);
+    return;
 
   case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
-    {
-      USBD_CtlError(pdev , req);
-      return;
-    }
+    USBD_CtlError(pdev , req);
+    return;
 
   default: 
      USBD_CtlError(pdev , req);

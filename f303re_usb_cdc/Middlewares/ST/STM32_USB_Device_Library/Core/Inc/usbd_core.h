@@ -29,65 +29,14 @@
 #ifndef __USBD_CORE_H
 #define __USBD_CORE_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_conf.h"
 #include "usbd_def.h"
 #include "usbd_ioreq.h"
 #include "usbd_ctlreq.h"
 
-/** @addtogroup STM32_USB_DEVICE_LIBRARY
-  * @{
-  */
-  
-/** @defgroup USBD_CORE
-  * @brief This file is the Header file for usbd_core.c file
-  * @{
-  */ 
-
-
-/** @defgroup USBD_CORE_Exported_Defines
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-
-/** @defgroup USBD_CORE_Exported_TypesDefinitions
-  * @{
-  */
- 
-
-/**
-  * @}
-  */ 
-
-
-
-/** @defgroup USBD_CORE_Exported_Macros
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CORE_Exported_Variables
-  * @{
-  */ 
 #define USBD_SOF          USBD_LL_SOF
-/**
-  * @}
-  */ 
 
-/** @defgroup USBD_CORE_Exported_FunctionsPrototype
-  * @{
-  */ 
 USBD_StatusTypeDef USBD_Init(USBD_HandleTypeDef *pdev, USBD_DescriptorsTypeDef *pdesc, uint8_t id);
 USBD_StatusTypeDef USBD_DeInit(USBD_HandleTypeDef *pdev);
 USBD_StatusTypeDef USBD_Start  (USBD_HandleTypeDef *pdev);
@@ -143,25 +92,6 @@ USBD_StatusTypeDef  USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev,
 uint32_t USBD_LL_GetRxDataSize  (USBD_HandleTypeDef *pdev, uint8_t  ep_addr);  
 void  USBD_LL_Delay (uint32_t Delay);
 
-/**
-  * @}
-  */ 
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* __USBD_CORE_H */
 
-/**
-  * @}
-  */ 
-
-/**
-* @}
-*/ 
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
-
