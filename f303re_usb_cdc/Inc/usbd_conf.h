@@ -63,21 +63,7 @@
 #define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE     64
 #define USBD_DAP_REPORT_DESC_SIZE   33
 
-/* #define for FS and HS identification */
-#define DEVICE_FS 		0
-
-/* Memory management macros */  
-#define USBD_malloc               (uint32_t *)USBD_static_malloc
-#define USBD_free                 USBD_static_free
-#define USBD_memset               /* Not used */
-#define USBD_memcpy               /* Not used */
-
 #define USBD_Delay   HAL_Delay
-
-/* For footprint reasons and since only one allocation is handled in the HID class
-   driver, the malloc/free is changed into a static allocation method */
-void *USBD_static_malloc(uint32_t size);
-void USBD_static_free(void *p);    
 
 /* DEBUG macros */    
 #if (USBD_DEBUG_LEVEL > 0)

@@ -32,18 +32,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include  "usbd_ioreq.h"
 
-#define CDC_IN_EP                                   0x81  /* EP1 for data IN */
-#define CDC_OUT_EP                                  0x01  /* EP1 for data OUT */
+#define CDC_IN_EP                                   0x83  /* EP3 for data IN */
+#define CDC_OUT_EP                                  0x03  /* EP3 for data OUT */
 #define CDC_CMD_EP                                  0x82  /* EP2 for CDC commands */
 
 /* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
-#define CDC_DATA_HS_MAX_PACKET_SIZE                 512  /* Endpoint IN & OUT Packet size */
 #define CDC_DATA_FS_MAX_PACKET_SIZE                 64  /* Endpoint IN & OUT Packet size */
 #define CDC_CMD_PACKET_SIZE                         8  /* Control Endpoint Packet size */ 
-
-#define USB_CDC_CONFIG_DESC_SIZ                     67
-#define CDC_DATA_HS_IN_PACKET_SIZE                  CDC_DATA_HS_MAX_PACKET_SIZE
-#define CDC_DATA_HS_OUT_PACKET_SIZE                 CDC_DATA_HS_MAX_PACKET_SIZE
 
 #define CDC_DATA_FS_IN_PACKET_SIZE                  CDC_DATA_FS_MAX_PACKET_SIZE
 #define CDC_DATA_FS_OUT_PACKET_SIZE                 CDC_DATA_FS_MAX_PACKET_SIZE
@@ -81,7 +76,7 @@ typedef struct _USBD_CDC_Itf
 
 typedef struct
 {
-  uint32_t data[CDC_DATA_HS_MAX_PACKET_SIZE/4];      /* Force 32bits alignment */
+  uint32_t data[CDC_DATA_FS_MAX_PACKET_SIZE/4];      /* Force 32bits alignment */
   uint8_t  CmdOpCode;
   uint8_t  CmdLength;    
   uint8_t  *RxBuffer;  
@@ -95,10 +90,7 @@ typedef struct
 USBD_CDC_HandleTypeDef; 
 
 extern USBD_ClassTypeDef  USBD_CDC;
-#define USBD_CDC_CLASS    &USBD_CDC
-
-uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev, 
-                                      USBD_CDC_ItfTypeDef *fops);
+//#define USBD_CDC_CLASS    &USBD_CDC
 
 uint8_t  USBD_CDC_SetTxBuffer        (USBD_HandleTypeDef   *pdev,
                                       uint8_t  *pbuff,

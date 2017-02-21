@@ -82,16 +82,11 @@ typedef struct
 USBD_CUSTOM_HID_HandleTypeDef; 
 
 extern USBD_ClassTypeDef  USBD_CUSTOM_HID;
-#define USBD_CUSTOM_HID_CLASS    &USBD_CUSTOM_HID
+//#define USBD_CUSTOM_HID_CLASS    &USBD_CUSTOM_HID
 
 uint8_t USBD_CUSTOM_HID_SendReport (USBD_HandleTypeDef *pdev, 
                                  uint8_t *report,
                                  uint16_t len);
-
-
-
-uint8_t  USBD_CUSTOM_HID_RegisterInterface  (USBD_HandleTypeDef   *pdev, 
-                                             USBD_CUSTOM_HID_ItfTypeDef *fops);
 
 #endif  /* __USB_CUSTOMHID_H */
   

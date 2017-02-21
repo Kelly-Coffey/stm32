@@ -47,11 +47,13 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 
-//#include "usbd_cdc.h"
-//#include "usbd_cdc_if.h"
+#include "usbd_cdc.h"
+#include "usbd_cdc_if.h"
 
 #include "usbd_customhid.h"
 #include "usbd_customhid_if.h"
+
+#include "usbd_composite.h"
 
 #include "uart_serial.h"
 
@@ -101,13 +103,11 @@ int main(void)
   printf("Nucleo F303R\n");
 
   /* Init Device Library,Add Supported Class and Start the library*/
-  USBD_Init(&hUsbDevice, &FS_Desc, DEVICE_FS);
+  USBD_Init(&hUsbDevice, &FS_Desc, 0);
 
-//  USBD_RegisterClass(&hUsbDevice, &USBD_CDC);
-  USBD_RegisterClass(&hUsbDevice, &USBD_CUSTOM_HID);
+  USBD_RegisterClass(&hUsbDevice, &USBD_COMPOSITE);
 
-//  USBD_CDC_RegisterInterface(&hUsbDevice, &USBD_Interface_fops_FS);
-  USBD_CUSTOM_HID_RegisterInterface(&hUsbDevice, &USBD_CustomHID_fops);
+  USBD_COMPOSITE_RegisterInterface(&hUsbDevice, &USBD_CustomHID_fops, &USBD_Interface_fops_FS);
 
   USBD_Start(&hUsbDevice);
 
