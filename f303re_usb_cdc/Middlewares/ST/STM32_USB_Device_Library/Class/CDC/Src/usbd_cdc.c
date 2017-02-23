@@ -171,7 +171,6 @@ static uint8_t  USBD_CDC_DeInit (USBD_HandleTypeDef *pdev,
   USBD_LL_CloseEP(pdev,
               CDC_CMD_EP);
   
-  
   /* DeInit  physical Interface components */
   (((USBD_COMPOSITE_ItfTypeDef*)pdev->pUserData)->cdc_fops)->DeInit();
   

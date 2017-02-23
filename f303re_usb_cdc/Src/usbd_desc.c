@@ -55,7 +55,7 @@
 #define USBD_PRODUCT_STRING_FS       "STM32 CMSIS-DAP"
 #define USBD_SERIALNUMBER_STRING_FS  "00000000001A"
 #define USBD_CONFIGURATION_STRING_FS "CMSIS-DAP Config"
-#define USBD_INTERFACE_STRING_FS     "CMSIS-DAP Interface"
+#define USBD_HID_INTERFACE_STRING_FS "CMSIS-DAP HID Interface"
 
 uint8_t *USBD_FS_DeviceDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
 uint8_t *USBD_FS_LangIDStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
@@ -63,7 +63,7 @@ uint8_t *USBD_FS_ManufacturerStrDescriptor ( USBD_SpeedTypeDef speed , uint16_t 
 uint8_t *USBD_FS_ProductStrDescriptor ( USBD_SpeedTypeDef speed , uint16_t *length);
 uint8_t *USBD_FS_SerialStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
 uint8_t *USBD_FS_ConfigStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
-uint8_t *USBD_FS_InterfaceStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
+uint8_t *USBD_FS_HIDInterfaceStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length);
 
 USBD_DescriptorsTypeDef FS_Desc =
 {
@@ -73,7 +73,7 @@ USBD_DescriptorsTypeDef FS_Desc =
   USBD_FS_ProductStrDescriptor,
   USBD_FS_SerialStrDescriptor,
   USBD_FS_ConfigStrDescriptor,
-  USBD_FS_InterfaceStrDescriptor,
+  USBD_FS_HIDInterfaceStrDescriptor,
 };
 
 /* USB Standard Device Descriptor */
@@ -190,15 +190,15 @@ uint8_t *  USBD_FS_ConfigStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *leng
 }
 
 /**
-* @brief  USBD_HS_InterfaceStrDescriptor 
+* @brief  USBD_HS_HIDInterfaceStrDescriptor 
 *         return the interface string descriptor
 * @param  speed : current device speed
 * @param  length : pointer to data length variable
 * @retval pointer to descriptor buffer
 */
-uint8_t *  USBD_FS_InterfaceStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length)
+uint8_t *  USBD_FS_HIDInterfaceStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length)
 {
-  USBD_GetString (USBD_INTERFACE_STRING_FS, USBD_StrDesc, length);
+  USBD_GetString (USBD_HID_INTERFACE_STRING_FS, USBD_StrDesc, length);
   return USBD_StrDesc;  
 }
 

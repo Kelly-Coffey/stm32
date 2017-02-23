@@ -7,7 +7,7 @@
 #include "usbd_customhid.h"
 #include "usbd_cdc.h"
 
-#define USB_COMPOSITE_CONFIG_DESC_SIZ   107
+#define USB_COMPOSITE_CONFIG_DESC_SIZ   41
 
 typedef struct _USBD_COMPOSITE_Itf
 {

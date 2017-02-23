@@ -314,7 +314,7 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
       pbuf = pdev->pDesc->GetConfigurationStrDescriptor(pdev->dev_speed, &len);
       break;
       
-    case USBD_IDX_INTERFACE_STR:
+    case USBD_IDX_HID_INTERFACE_STR:
       pbuf = pdev->pDesc->GetInterfaceStrDescriptor(pdev->dev_speed, &len);
       break;
       
