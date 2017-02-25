@@ -142,8 +142,7 @@
 // DAP Data structure
 typedef struct {
   uint8_t     debug_port;                       // Debug Port
-  uint8_t     fast_clock;                       // Fast Clock Flag
-  uint32_t   clock_delay;                       // Clock Delay
+  uint32_t    clock_delay;                      // Clock Delay
   struct {                                      // Transfer Configuration
     uint8_t   idle_cycles;                      // Idle cycles after transfer
     uint16_t  retry_count;                      // Number of retries after WAIT response
@@ -174,26 +173,10 @@ extern void     DAP_Setup (void);
 #define DELAY_SLOW_CYCLES       3       // Number of cycles for one iteration
 #endif
 static void PIN_DELAY_SLOW (uint32_t delay) {
-  int32_t count;
+  __IO int32_t count;
 
   count = delay;
   while (--count);
-}
-
-// Fixed delay for fast clock generation
-#ifndef DELAY_FAST_CYCLES
-#define DELAY_FAST_CYCLES       0       // Number of cycles: 0..3
-#endif
-static void PIN_DELAY_FAST (void) {
-#if (DELAY_FAST_CYCLES >= 1)
-  __nop();
-#endif
-#if (DELAY_FAST_CYCLES >= 2)
-  __nop();
-#endif
-#if (DELAY_FAST_CYCLES >= 3)
-  __nop();
-#endif
 }
 
 #endif  /* __DAP_H__ */

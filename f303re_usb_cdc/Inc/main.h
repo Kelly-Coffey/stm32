@@ -64,10 +64,13 @@
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
 
-#define SWDIO_Pin GPIO_PIN_3
+#define SWDIO_Pin GPIO_PIN_4
 #define SWDIO_GPIO_Port GPIOB
 #define SWCLK_Pin GPIO_PIN_5
 #define SWCLK_GPIO_Port GPIOB
+
+#define SWRST_Pin GPIO_PIN_6
+#define SWRST_GPIO_Port GPIOB
 
 void Error_Handler(void);
 

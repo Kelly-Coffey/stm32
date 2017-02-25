@@ -37,14 +37,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
-extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim4;
-//extern DMA_HandleTypeDef hdma_usart1_rx;
-//extern DMA_HandleTypeDef hdma_usart1_tx;
-extern DMA_HandleTypeDef hdma_usart2_tx;
-extern DMA_HandleTypeDef hdma_usart2_rx;
-//extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -67,75 +59,11 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-* @brief This function handles DMA1 channel4 global interrupt.
-*/
-void DMA1_Channel4_IRQHandler(void)
-{
-//  HAL_DMA_IRQHandler(&hdma_usart1_tx);
-}
-
-/**
-* @brief This function handles DMA1 channel5 global interrupt.
-*/
-void DMA1_Channel5_IRQHandler(void)
-{
-//  HAL_DMA_IRQHandler(&hdma_usart1_rx);
-}
-
-/**
-* @brief This function handles DMA1 channel6 global interrupt.
-*/
-void DMA1_Channel6_IRQHandler(void)
-{
-  HAL_DMA_IRQHandler(&hdma_usart2_rx);
-}
-
-/**
-* @brief This function handles DMA1 channel7 global interrupt.
-*/
-void DMA1_Channel7_IRQHandler(void)
-{
-  HAL_DMA_IRQHandler(&hdma_usart2_tx);
-}
-
-/**
 * @brief This function handles USB low priority or CAN_RX0 interrupts.
 */
 void USB_LP_CAN_RX0_IRQHandler(void)
 {
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
-}
-
-/**
-* @brief This function handles TIM3 global interrupt.
-*/
-void TIM3_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&htim3);
-}
-
-/**
-* @brief This function handles TIM4 global interrupt.
-*/
-void TIM4_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&htim4);
-}
-
-/**
-* @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
-*/
-void USART1_IRQHandler(void)
-{
-//  HAL_UART_IRQHandler(&huart1);
-}
-
-/**
-* @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.
-*/
-void USART2_IRQHandler(void)
-{
-  HAL_UART_IRQHandler(&huart2);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

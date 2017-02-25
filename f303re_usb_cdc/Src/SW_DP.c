@@ -25,14 +25,6 @@
 
 // SWCLK/TCK I/O pin -------------------------------------
 
-/** SWCLK/TCK I/O pin: Get Input.
-\return Current status of the SWCLK/TCK DAP hardware I/O pin.
-*/
-static uint32_t PIN_SWCLK_TCK_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWCLK_GPIO_Port, SWCLK_Pin);
-}
-
 /** SWCLK/TCK I/O pin: Set Output to High.
 Set the SWCLK/TCK DAP hardware I/O pin to high level.
 */
@@ -50,14 +42,6 @@ static void     PIN_SWCLK_TCK_CLR(void)
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
-
-/** SWDIO/TMS I/O pin: Get Input.
-\return Current status of the SWDIO/TMS DAP hardware I/O pin.
-*/
-static uint32_t PIN_SWDIO_TMS_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWDIO_GPIO_Port, SWDIO_Pin);
-}
 
 /** SWDIO/TMS I/O pin: Set Output to High.
 Set the SWDIO/TMS DAP hardware I/O pin to high level.
@@ -101,6 +85,7 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 static  void     PIN_SWDIO_OUT_ENABLE(void)
 {
+#if 0
   GPIO_InitTypeDef GPIO_InitStruct;
 
   GPIO_InitStruct.Pin = SWDIO_Pin;
@@ -108,6 +93,9 @@ static  void     PIN_SWDIO_OUT_ENABLE(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+#else
+  GPIOB->MODER |= GPIO_MODER_MODER4_0;
+#endif
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -116,12 +104,16 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 static  void     PIN_SWDIO_OUT_DISABLE(void)
 {
+#if 0
   GPIO_InitTypeDef GPIO_InitStruct;
 
   GPIO_InitStruct.Pin = SWDIO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+#else
+  GPIOB->MODER &= ~GPIO_MODER_MODER4_0;
+#endif
 }
 
 #define PIN_SWCLK_SET PIN_SWCLK_TCK_SET
@@ -176,8 +168,7 @@ void SWJ_Sequence (uint32_t count, uint8_t *data) {
 //   request: A[3:2] RnW APnDP
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
-#define SWD_TransferFunction(speed)     /**/                                    \
-uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {                \
+uint8_t SWD_Transfer (uint32_t request, uint32_t *data) {                       \
   uint32_t ack;                                                                 \
   uint32_t bit;                                                                 \
   uint32_t val;                                                                 \
@@ -297,26 +288,4 @@ uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {                
   PIN_SWDIO_OUT_ENABLE();                                                       \
   PIN_SWDIO_OUT(1);                                                             \
   return (ack);                                                                 \
-}
-
-
-#undef  PIN_DELAY
-#define PIN_DELAY() PIN_DELAY_FAST()
-SWD_TransferFunction(Fast);
-
-#undef  PIN_DELAY
-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
-SWD_TransferFunction(Slow);
-
-
-// SWD Transfer I/O
-//   request: A[3:2] RnW APnDP
-//   data:    DATA[31:0]
-//   return:  ACK[2:0]
-uint8_t  SWD_Transfer(uint32_t request, uint32_t *data) {
-  if (DAP_Data.fast_clock) {
-    return SWD_TransferFast(request, data);
-  } else {
-    return SWD_TransferSlow(request, data);
-  }
 }

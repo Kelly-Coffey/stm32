@@ -26,18 +26,11 @@
 
 #define DAP_FW_VER      "1.0"   // Firmware Version
 
-#define CPU_CLOCK             72000000        ///< Specifies the CPU Clock in Hz
+#define CPU_CLOCK             48000000        ///< Specifies the CPU Clock in Hz
 #define IO_PORT_WRITE_CYCLES  2 ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
-#define DAP_DEFAULT_SWJ_CLOCK 5000000         ///< Default SWD/JTAG clock frequency in Hz.
 
 #define DAP_PACKET_SIZE       64
 #define DAP_PACKET_COUNT      1
-
-#define MAX_SWJ_CLOCK(delay_cycles) \
-  (CPU_CLOCK/2 / (IO_PORT_WRITE_CYCLES + delay_cycles))
-
-#define CLOCK_DELAY(swj_clock) \
-  ((CPU_CLOCK/2 / swj_clock) - IO_PORT_WRITE_CYCLES)
 
 DAP_Data_t DAP_Data;            // DAP Data
 __IO uint8_t DAP_TransferAbort; // Transfer Abort Flag
@@ -56,8 +49,10 @@ static void PORT_SWD_SETUP(void)
   GPIO_InitStruct.Pin = SWDIO_Pin | SWCLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -73,6 +68,8 @@ static void PORT_OFF(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -153,13 +150,17 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 static  void     PIN_SWDIO_OUT_ENABLE(void)
 {
+#if 0
   GPIO_InitTypeDef GPIO_InitStruct;
 
   GPIO_InitStruct.Pin = SWDIO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+#else
+  GPIOB->MODER |= GPIO_MODER_MODER4_0;
+#endif  
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -168,12 +169,16 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 static  void     PIN_SWDIO_OUT_DISABLE(void)
 {
+#if 0
   GPIO_InitTypeDef GPIO_InitStruct;
 
   GPIO_InitStruct.Pin = SWDIO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
+#else
+  GPIOB->MODER &= ~GPIO_MODER_MODER4_0;
+#endif  
 }
 
 // nRESET Pin I/O------------------------------------------
@@ -183,7 +188,7 @@ static  void     PIN_SWDIO_OUT_DISABLE(void)
 */
 static  uint32_t PIN_nRESET_IN(void)
 {
-  return 1;
+  return HAL_GPIO_ReadPin(SWRST_GPIO_Port, SWRST_Pin);
 }
 
 /** nRESET I/O pin: Set Output.
@@ -193,6 +198,11 @@ static  uint32_t PIN_nRESET_IN(void)
 */
 static  void     PIN_nRESET_OUT(uint32_t bit)
 {
+  if (bit) {
+    HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_RESET);
+  }
 }
 
 // Get DAP Information
@@ -238,25 +248,25 @@ static uint8_t DAP_Info(uint8_t id, uint8_t* info)
   return (length);
 }
 
-extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim2;
 
 // Start Timer
 static inline void TIMER_START (uint32_t usec) {
-  TIM6->CR1 &= ~TIM_CR1_CEN;
-  TIM6->CNT = 0;
-  TIM6->PSC = (usec >> 16) * 72 - 1;
-  TIM6->ARR = usec - 1;
-  TIM6->CR1 |= TIM_CR1_CEN;
+  HAL_TIM_Base_Stop(&htim2);
+  htim2.Init.Period = usec-1;
+  HAL_TIM_Base_Init(&htim2);
+  __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
+  HAL_TIM_Base_Start(&htim2);
 }
 
 // Stop Timer
 static inline void TIMER_STOP (void) {
-  TIM6->CR1 &= ~TIM_CR1_CEN;
+  HAL_TIM_Base_Stop(&htim2);
 }
 
 // Check if Timer expired
 static inline uint32_t TIMER_EXPIRED (void) {
-  return ((TIM6->CR1 & TIM_CR1_CEN) ? 0 : 1);
+  return (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_UPDATE) != RESET);
 }
 
 // Process Host Status command and prepare response
@@ -402,22 +412,13 @@ static uint32_t DAP_SWJ_Clock(uint8_t *request, uint8_t *response)
     return (1);
   }
 
-  if (clock >= MAX_SWJ_CLOCK(DELAY_FAST_CYCLES)) {
-    DAP_Data.fast_clock  = 1;
-    DAP_Data.clock_delay = 1;
-  } else {
-    DAP_Data.fast_clock  = 0;
-
-    delay = (CPU_CLOCK/2 + (clock - 1)) / clock;
-    if (delay > IO_PORT_WRITE_CYCLES) {
-      delay -= IO_PORT_WRITE_CYCLES;
-      delay  = (delay + (DELAY_SLOW_CYCLES - 1)) / DELAY_SLOW_CYCLES;
-    } else {
-      delay  = 1;
-    }
-
-    DAP_Data.clock_delay = delay;
+  delay = (CPU_CLOCK/2 + (clock - 1)) / clock;
+  if (delay > IO_PORT_WRITE_CYCLES) {
+    delay -= IO_PORT_WRITE_CYCLES;
+    delay  = (delay + (DELAY_SLOW_CYCLES - 1)) / DELAY_SLOW_CYCLES;
   }
+
+  DAP_Data.clock_delay = delay;
 
   *response = DAP_OK;
   return (1);
@@ -813,42 +814,15 @@ uint32_t DAP_ProcessCommand(uint8_t *request, uint8_t *response)
       break;
 
     case ID_DAP_Transfer:
-      switch (DAP_Data.debug_port) {
-        case DAP_PORT_SWD:
-          num = DAP_SWD_Transfer (request, response);
-          break;
-
-        default:
-          *(response+0) = 0;    // Response count
-          *(response+1) = 0;    // Response value
-          num = 2;
-      }
+      num = DAP_SWD_Transfer (request, response);
       break;
 
     case ID_DAP_TransferBlock:
-      switch (DAP_Data.debug_port) {
-        case DAP_PORT_SWD:
-          num = DAP_SWD_TransferBlock (request, response);
-          break;
-
-        default:
-          *(response+0) = 0;    // Response count [7:0]
-          *(response+1) = 0;    // Response count[15:8]
-          *(response+2) = 0;    // Response value
-          num = 3;
-      }
+      num = DAP_SWD_TransferBlock (request, response);
       break;
 
     case ID_DAP_WriteABORT:
-      switch (DAP_Data.debug_port) {
-        case DAP_PORT_SWD:
-          num = DAP_SWD_Abort (request, response);
-          break;
-
-        default:
-          *response = DAP_ERROR;
-          return (2);
-      }
+      num = DAP_SWD_Abort (request, response);
       break;
 
     case ID_DAP_SWJ_Pins:
@@ -878,7 +852,7 @@ void DAP_Setup(void) {
   // Default settings (only non-zero values)
 //DAP_Data.debug_port  = 0;
 //DAP_Data.fast_clock  = 0;
-  DAP_Data.clock_delay = CLOCK_DELAY(DAP_DEFAULT_SWJ_CLOCK);
+  DAP_Data.clock_delay = 2;
 //DAP_Data.transfer.idle_cycles = 0;
   DAP_Data.transfer.retry_count = 100;
 //DAP_Data.transfer.match_retry = 0;

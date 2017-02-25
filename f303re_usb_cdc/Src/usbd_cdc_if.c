@@ -64,6 +64,7 @@ extern UART_HandleTypeDef huart2;
 
 #define DMA_WRITE_PTR ( (APP_TX_DATA_SIZE - __HAL_DMA_GET_COUNTER(huart2.hdmarx)) & (APP_TX_DATA_SIZE - 1) )
 
+UART_HandleTypeDef huart2;
 TIM_HandleTypeDef htim3;
 
 extern USBD_HandleTypeDef hUsbDevice;
