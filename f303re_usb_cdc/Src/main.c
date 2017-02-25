@@ -60,6 +60,10 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart2_rx;
+
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDevice;
 
@@ -68,8 +72,10 @@ static void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+
 //static void MX_USART1_UART_DMA_Init(void);
-//static void MX_USART2_UART_DMA_Init(void);
+
+static void MX_USART2_UART_DMA_Init(void);
 
 int main(void)
 {
@@ -85,14 +91,14 @@ int main(void)
   MX_GPIO_Init();
 
   /* DMA controller clock enable */
-//  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
 //  MX_USART1_UART_DMA_Init();
-//  MX_USART2_UART_DMA_Init();
+  MX_USART2_UART_DMA_Init();
 
   MX_TIM2_Init();
 
-//  uart_serial_init(&huart2);
-//  printf("Nucleo F303R\n");
+  uart_serial_init(&huart2);
+  printf("Nucleo F303R\n");
 
   /* Init Device Library,Add Supported Class and Start the library*/
   USBD_Init(&hUsbDevice, &FS_Desc, 0);
@@ -195,6 +201,36 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+}
+
+/* USART2 init function */
+static void MX_USART2_UART_DMA_Init(void)
+{
+  /* DMA interrupt init */
+  /* DMA1_Channel6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_RXOVERRUNDISABLE_INIT|UART_ADVFEATURE_DMADISABLEONERROR_INIT;
+  huart2.AdvancedInit.OverrunDisable = UART_ADVFEATURE_OVERRUN_DISABLE;
+  huart2.AdvancedInit.DMADisableonRxError = UART_ADVFEATURE_DMA_DISABLEONRXERROR;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
 }
 
 /** Configure pins as 

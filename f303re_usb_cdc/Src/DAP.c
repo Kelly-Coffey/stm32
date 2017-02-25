@@ -221,6 +221,7 @@ static uint8_t DAP_Info(uint8_t id, uint8_t* info)
     case DAP_ID_SER_NUM:
       break;
     case DAP_ID_FW_VER:
+      printf("DAP Info FwVer\n");
       memcpy(info, DAP_FW_Ver, sizeof(DAP_FW_Ver)+1);
       length = sizeof(DAP_FW_Ver)+1;
       break;
@@ -229,15 +230,18 @@ static uint8_t DAP_Info(uint8_t id, uint8_t* info)
     case DAP_ID_DEVICE_NAME:
       break;
     case DAP_ID_CAPABILITIES:
+      printf("DAP Info Cap\n");
       info[0] = 1;  /* SWD */
       length = 1;
       break;
     case DAP_ID_PACKET_SIZE:
+      printf("DAP Info PacketSize\n");
       info[0] = (uint8_t)(DAP_PACKET_SIZE >> 0);
       info[1] = (uint8_t)(DAP_PACKET_SIZE >> 8);
       length = 2;
       break;
     case DAP_ID_PACKET_COUNT:
+      printf("DAP Info PacketCnt\n");
       info[0] = DAP_PACKET_COUNT;
       length = 1;
       break;

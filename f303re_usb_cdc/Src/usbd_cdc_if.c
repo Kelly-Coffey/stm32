@@ -60,11 +60,11 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 uint32_t TxReadPtr;
 
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart1;
 
-#define DMA_WRITE_PTR ( (APP_TX_DATA_SIZE - __HAL_DMA_GET_COUNTER(huart2.hdmarx)) & (APP_TX_DATA_SIZE - 1) )
+#define DMA_WRITE_PTR ( (APP_TX_DATA_SIZE - __HAL_DMA_GET_COUNTER(huart1.hdmarx)) & (APP_TX_DATA_SIZE - 1) )
 
-UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart1;
 TIM_HandleTypeDef htim3;
 
 extern USBD_HandleTypeDef hUsbDevice;
@@ -94,7 +94,7 @@ USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
   */
 static int8_t CDC_Init_FS(void)
 {
-  HAL_UART_Receive_DMA(&huart2, UserTxBufferFS, APP_RX_DATA_SIZE);
+  HAL_UART_Receive_DMA(&huart1, UserTxBufferFS, APP_RX_DATA_SIZE);
 
   MX_TIM3_Init();
   HAL_TIM_Base_Start_IT(&htim3);
@@ -120,22 +120,22 @@ static int8_t CDC_DeInit_FS(void)
   HAL_TIM_Base_DeInit(&htim3);
 
   /* Stop UART DMA Rx request if ongoing */
-  if ((huart2.RxState == HAL_UART_STATE_BUSY_RX) &&
-      (HAL_IS_BIT_SET(huart2.Instance->CR3, USART_CR3_DMAR)))
+  if ((huart1.RxState == HAL_UART_STATE_BUSY_RX) &&
+      (HAL_IS_BIT_SET(huart1.Instance->CR3, USART_CR3_DMAR)))
   {
-    CLEAR_BIT(huart2.Instance->CR3, USART_CR3_DMAR);
+    CLEAR_BIT(huart1.Instance->CR3, USART_CR3_DMAR);
 
     /* Abort the UART DMA Rx channel */
-    if(huart2.hdmarx != NULL)
+    if(huart1.hdmarx != NULL)
     {
-      HAL_DMA_Abort(huart2.hdmarx);
+      HAL_DMA_Abort(huart1.hdmarx);
     }
 
-    CLEAR_BIT(huart2.Instance->CR1, (USART_CR1_RXNEIE | USART_CR1_PEIE));
-    CLEAR_BIT(huart2.Instance->CR3, USART_CR3_EIE);
+    CLEAR_BIT(huart1.Instance->CR1, (USART_CR1_RXNEIE | USART_CR1_PEIE));
+    CLEAR_BIT(huart1.Instance->CR3, USART_CR3_EIE);
 
-    /* At end of Rx process, restore huart2.RxState to Ready */
-    huart2.RxState = HAL_UART_STATE_READY;
+    /* At end of Rx process, restore huart1.RxState to Ready */
+    huart1.RxState = HAL_UART_STATE_READY;
   }
 
   return (USBD_OK);
@@ -281,8 +281,8 @@ void HAL_TIM_PeriodElapsedCallback_(TIM_HandleTypeDef *htim)
   */
 static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 {
-  while (huart2.gState != HAL_UART_STATE_READY) ;
-  HAL_UART_Transmit_DMA(&huart2, Buf, *Len);
+  while (huart1.gState != HAL_UART_STATE_READY) ;
+  HAL_UART_Transmit_DMA(&huart1, Buf, *Len);
   return (USBD_OK);
 }
 
@@ -338,7 +338,7 @@ static void MX_TIM3_Init(void)
   */
 static void ComPort_Config(void)
 {
-  if(HAL_UART_DeInit(&huart2) != HAL_OK)
+  if(HAL_UART_DeInit(&huart1) != HAL_OK)
   {
     /* Initialization Error */
     Error_Handler();
@@ -348,13 +348,13 @@ static void ComPort_Config(void)
   switch (LineCoding.format)
   {
   case 0:
-    huart2.Init.StopBits = UART_STOPBITS_1;
+    huart1.Init.StopBits = UART_STOPBITS_1;
     break;
   case 2:
-    huart2.Init.StopBits = UART_STOPBITS_2;
+    huart1.Init.StopBits = UART_STOPBITS_2;
     break;
   default :
-    huart2.Init.StopBits = UART_STOPBITS_1;
+    huart1.Init.StopBits = UART_STOPBITS_1;
     break;
   }
   
@@ -362,16 +362,16 @@ static void ComPort_Config(void)
   switch (LineCoding.paritytype)
   {
   case 0:
-    huart2.Init.Parity = UART_PARITY_NONE;
+    huart1.Init.Parity = UART_PARITY_NONE;
     break;
   case 1:
-    huart2.Init.Parity = UART_PARITY_ODD;
+    huart1.Init.Parity = UART_PARITY_ODD;
     break;
   case 2:
-    huart2.Init.Parity = UART_PARITY_EVEN;
+    huart1.Init.Parity = UART_PARITY_EVEN;
     break;
   default :
-    huart2.Init.Parity = UART_PARITY_NONE;
+    huart1.Init.Parity = UART_PARITY_NONE;
     break;
   }
   
@@ -380,35 +380,35 @@ static void ComPort_Config(void)
   {
   case 0x07:
     /* With this configuration a parity (Even or Odd) must be set */
-    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B;
     break;
   case 0x08:
-    if(huart2.Init.Parity == UART_PARITY_NONE)
+    if(huart1.Init.Parity == UART_PARITY_NONE)
     {
-      huart2.Init.WordLength = UART_WORDLENGTH_8B;
+      huart1.Init.WordLength = UART_WORDLENGTH_8B;
     }
     else 
     {
-      huart2.Init.WordLength = UART_WORDLENGTH_9B;
+      huart1.Init.WordLength = UART_WORDLENGTH_9B;
     }
     
     break;
   default :
-    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B;
     break;
   }
   
-  huart2.Init.BaudRate = LineCoding.bitrate;
-  huart2.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-  huart2.Init.Mode       = UART_MODE_TX_RX;
+  huart1.Init.BaudRate = LineCoding.bitrate;
+  huart1.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  huart1.Init.Mode       = UART_MODE_TX_RX;
   
-  if(HAL_UART_Init(&huart2) != HAL_OK)
+  if(HAL_UART_Init(&huart1) != HAL_OK)
   {
     /* Initialization Error */
     Error_Handler();
   }
 
-  HAL_UART_Receive_DMA(&huart2, UserTxBufferFS, APP_RX_DATA_SIZE);
+  HAL_UART_Receive_DMA(&huart1, UserTxBufferFS, APP_RX_DATA_SIZE);
   TxReadPtr = 0;
 }
 

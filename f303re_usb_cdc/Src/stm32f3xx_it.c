@@ -38,6 +38,12 @@
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
 
+extern TIM_HandleTypeDef htim4;
+
+extern DMA_HandleTypeDef hdma_usart2_tx;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+extern UART_HandleTypeDef huart2;
+
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
@@ -59,11 +65,43 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+* @brief This function handles DMA1 channel6 global interrupt.
+*/
+void DMA1_Channel6_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+}
+
+/**
+* @brief This function handles DMA1 channel7 global interrupt.
+*/
+void DMA1_Channel7_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+}
+
+/**
 * @brief This function handles USB low priority or CAN_RX0 interrupts.
 */
 void USB_LP_CAN_RX0_IRQHandler(void)
 {
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
+}
+
+/**
+* @brief This function handles TIM4 global interrupt.
+*/
+void TIM4_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim4);
+}
+
+/**
+* @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.
+*/
+void USART2_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart2);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -38,7 +38,7 @@ static uint8_t USBD_COMPOSITE_CfgDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] =
 {
   0x09, /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION, /* bDescriptorType: Configuration */
-  USB_CUSTOM_HID_CONFIG_DESC_SIZ,
+  USB_COMPOSITE_CONFIG_DESC_SIZ,
   /* wTotalLength: Bytes returned */
   0x00,
   0x01,         /*bNumInterfaces: 1 interface*/
@@ -102,6 +102,7 @@ static uint8_t USBD_COMPOSITE_CfgDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] =
 static uint8_t  USBD_COMPOSITE_Init (USBD_HandleTypeDef *pdev, 
                                uint8_t cfgidx)
 {
+  printf("USBD Init\n");
   return USBD_CUSTOM_HID.Init(pdev, cfgidx);
 }
 
@@ -115,6 +116,7 @@ static uint8_t  USBD_COMPOSITE_Init (USBD_HandleTypeDef *pdev,
 static uint8_t  USBD_COMPOSITE_DeInit (USBD_HandleTypeDef *pdev, 
                                  uint8_t cfgidx)
 {
+  printf("USBD DeInit\n");
   return USBD_CUSTOM_HID.DeInit(pdev, cfgidx);
 }
 
@@ -129,18 +131,19 @@ static uint8_t  USBD_COMPOSITE_Setup (USBD_HandleTypeDef *pdev,
                                 USBD_SetupReqTypedef *req)
 {
   static uint8_t ifalt = 0;
-    
+  
   switch (req->bmRequest & USB_REQ_TYPE_MASK)
   {
   case USB_REQ_TYPE_CLASS :
     switch (req->bmRequest & USB_REQ_RECIPIENT_MASK)
     {
       case USB_REQ_RECIPIENT_INTERFACE:
-        if (pdev->request.wIndex == 0) {
+        printf("USBD Setup Interface:%d\n", req->wIndex);
+        if (req->wIndex == 0) {
           return USBD_CUSTOM_HID.Setup(pdev, req);
         }
         else
-        if (pdev->request.wIndex < 2) {
+        if (req->wIndex < 2) {
 //        return USBD_CDC.Setup(pdev, req);
         }
         break;
@@ -154,6 +157,7 @@ static uint8_t  USBD_COMPOSITE_Setup (USBD_HandleTypeDef *pdev,
     switch (req->bRequest)
     {
     case USB_REQ_GET_DESCRIPTOR: 
+      printf("USBD Setup GetDesc Idx:%d\n", req->wIndex);
       return USBD_CUSTOM_HID.Setup(pdev, req);
       break;
 
@@ -185,10 +189,12 @@ static uint8_t  USBD_COMPOSITE_DataIn (USBD_HandleTypeDef *pdev,
 {
   switch (epnum) {
     case 1:
+      printf("USBD DataIn HID\n");
       return USBD_CUSTOM_HID.DataIn(pdev, epnum);
 
     case 2:
     case 3:
+      printf("USBD DataIn CDC:%d\n", epnum);
 //      return USBD_CDC.DataIn(pdev, epnum);
 
     default:
@@ -210,10 +216,12 @@ static uint8_t  USBD_COMPOSITE_DataOut (USBD_HandleTypeDef *pdev,
 {
   switch (epnum) {
     case 1:
+      printf("USBD DataOut HID\n");
       return USBD_CUSTOM_HID.DataOut(pdev, epnum);
 
     case 2:
     case 3:
+      printf("USBD DataOut CDC:%d\n", epnum);
 //      return USBD_CDC.DataOut(pdev, epnum);
 
     default:
@@ -237,6 +245,7 @@ uint8_t USBD_COMPOSITE_EP0_RxReady(USBD_HandleTypeDef *pdev)
       switch (pdev->request.bmRequest & USB_REQ_RECIPIENT_MASK)
       {
         case USB_REQ_RECIPIENT_INTERFACE:
+          printf("USBD RxRdy Idx:%d\n", pdev->request.wIndex);
           if (pdev->request.wIndex == 0) {
             return USBD_CUSTOM_HID.EP0_RxReady(pdev);
           }

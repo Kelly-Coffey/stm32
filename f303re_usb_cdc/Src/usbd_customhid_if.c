@@ -132,6 +132,8 @@ static int8_t CustomHID_DeInit(void)
   */
 static int8_t CustomHID_OutEvent  (uint8_t* request)
 {
+  TIM4->DIER &= ~TIM_DIER_UIE;
+
   uint32_t length = 0;
 
   memset(SendBuffer, 0, 64);
@@ -139,6 +141,8 @@ static int8_t CustomHID_OutEvent  (uint8_t* request)
   length = DAP_ProcessCommand(request, SendBuffer);
   
   USBD_CUSTOM_HID_SendReport(&hUsbDevice, SendBuffer, 64);
+
+  TIM4->DIER |= TIM_DIER_UIE;
   return (0);
 }
 
