@@ -15,6 +15,7 @@ static uint8_t  *USBD_COMPOSITE_GetCfgDesc (uint16_t *length);
 USBD_COMPOSITE_ItfTypeDef fops;
 
 extern USBD_ClassTypeDef  USBD_CUSTOM_HID;
+extern USBD_ClassTypeDef  USBD_CDC;
 
 USBD_ClassTypeDef  USBD_COMPOSITE = 
 {
