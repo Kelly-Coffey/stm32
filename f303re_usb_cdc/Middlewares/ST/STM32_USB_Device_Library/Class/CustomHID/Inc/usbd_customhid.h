@@ -32,10 +32,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include  "usbd_ioreq.h"
 
-#define CUSTOM_HID_EPIN_ADDR                 0x81
+#define CUSTOM_HID_EPIN_ADDR                 0x83
 #define CUSTOM_HID_EPIN_SIZE                 0x40
 
-#define CUSTOM_HID_EPOUT_ADDR                0x01
+#define CUSTOM_HID_EPOUT_ADDR                0x03
 #define CUSTOM_HID_EPOUT_SIZE                0x40
 
 #define USB_CUSTOM_HID_DESC_SIZ              9
