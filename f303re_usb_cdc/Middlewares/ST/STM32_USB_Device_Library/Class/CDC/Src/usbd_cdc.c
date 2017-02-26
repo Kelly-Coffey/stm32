@@ -112,19 +112,20 @@ USBD_ClassTypeDef  USBD_CDC =
 static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev, 
                                uint8_t cfgidx)
 {
-  {
-    /* Open EP IN */
-    USBD_LL_OpenEP(pdev,
-                   CDC_IN_EP,
-                   USBD_EP_TYPE_BULK,
-                   CDC_DATA_FS_IN_PACKET_SIZE);
+  printf("USBD_CDC_Init\n");
+
+  /* Open EP IN */
+   USBD_LL_OpenEP(pdev,
+                 CDC_IN_EP,
+                 USBD_EP_TYPE_BULK,
+                 CDC_DATA_FS_IN_PACKET_SIZE);
     
-    /* Open EP OUT */
-    USBD_LL_OpenEP(pdev,
-                   CDC_OUT_EP,
-                   USBD_EP_TYPE_BULK,
-                   CDC_DATA_FS_OUT_PACKET_SIZE);
-  }
+  /* Open EP OUT */
+  USBD_LL_OpenEP(pdev,
+                 CDC_OUT_EP,
+                 USBD_EP_TYPE_BULK,
+                 CDC_DATA_FS_OUT_PACKET_SIZE);
+
   /* Open Command IN EP */
   USBD_LL_OpenEP(pdev,
                  CDC_CMD_EP,
@@ -143,6 +144,8 @@ static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev,
                          CDC_OUT_EP,
                          hcdc.RxBuffer,
                          CDC_DATA_FS_OUT_PACKET_SIZE);
+
+  printf("USBD_CDC_Init ret\n");
 
   return 0;
 }
@@ -196,6 +199,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     {
       if (req->bmRequest & 0x80)
       {
+        printf("USBD CDC Setup: CtlSendData\n");
         (((USBD_COMPOSITE_ItfTypeDef*)pdev->pUserData)->cdc_fops)->Control(req->bRequest,
                                               (uint8_t *)hcdc.data,
                                               req->wLength);
@@ -205,6 +209,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
       }
       else
       {
+        printf("USBD CDC Setup: CtlPrepareRx\n");
         hcdc.CmdOpCode = req->bRequest;
         hcdc.CmdLength = req->wLength;
         
@@ -216,6 +221,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     }
     else
     {
+      printf("USBD CDC Setup: Control\n");
       (((USBD_COMPOSITE_ItfTypeDef*)pdev->pUserData)->cdc_fops)->Control(req->bRequest,
                                             (uint8_t*)req,
                                             0);
@@ -250,6 +256,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
   */
 static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
+  printf("USBD_CDC_DataIn\n");
   hcdc.TxState = 0;
 }
 
@@ -262,6 +269,8 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   */
 static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
+  printf("USBD_CDC_DataOut\n");
+
   /* Get the received data length */
   hcdc.RxLength = USBD_LL_GetRxDataSize (pdev, epnum);
   
@@ -285,6 +294,7 @@ static uint8_t  USBD_CDC_EP0_RxReady (USBD_HandleTypeDef *pdev)
 { 
   if((pdev->pUserData != NULL) && (hcdc.CmdOpCode != 0xFF))
   {
+    printf("USBD_CDC_RP0_RxRdy\n");
     (((USBD_COMPOSITE_ItfTypeDef*)pdev->pUserData)->cdc_fops)->Control(hcdc.CmdOpCode,
                                           (uint8_t *)hcdc.data,
                                           hcdc.CmdLength);
@@ -344,7 +354,7 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
                      hcdc.TxBuffer,
                      hcdc.TxLength);
     
-  return USBD_OK;
+    return USBD_OK;
   }
   else
   {
@@ -361,13 +371,13 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
 uint8_t  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
 {
   /* Suspend or Resume USB Out process */
-  {
-    /* Prepare Out endpoint to receive next packet */
-    USBD_LL_PrepareReceive(pdev,
-                           CDC_OUT_EP,
-                           hcdc.RxBuffer,
-                           CDC_DATA_FS_OUT_PACKET_SIZE);
-  }
+  
+  /* Prepare Out endpoint to receive next packet */
+  USBD_LL_PrepareReceive(pdev,
+                         CDC_OUT_EP,
+                         hcdc.RxBuffer,
+                         CDC_DATA_FS_OUT_PACKET_SIZE);
+  
   return USBD_OK;
 }
 

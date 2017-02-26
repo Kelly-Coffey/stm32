@@ -17,6 +17,7 @@ static void MX_TIM4_Init(void);
 static UART_HandleTypeDef *huart;
 static uint32_t rd_ptr;
 static uint32_t wr_ptr;
+static uint8_t wr_busy;
 
 #define DMA_WRITE_PTR ( (RX_BUF_SZ - __HAL_DMA_GET_COUNTER(huart->hdmarx)) & (RX_BUF_SZ - 1) )
 
@@ -35,6 +36,7 @@ void uart_serial_init(UART_HandleTypeDef *h)
 
   rd_ptr = 0;
   wr_ptr = 0;
+  wr_busy = 0;
 }
 
 uint8_t uart_rx_is_empty(void) {
@@ -89,16 +91,25 @@ _ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t cnt)
   * @param  htim: TIM handle
   * @retval None
   */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback_2(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance==TIM4)
   {
-    if (wr_ptr)
+    if (wr_ptr && !wr_busy)
     {
       memcpy(tx_buf, tx_dma_buf, wr_ptr);
       HAL_UART_Transmit_DMA(huart, tx_buf, wr_ptr);
       wr_ptr = 0;
+      wr_busy = 1;
     }
+  }
+}
+
+void HAL_UART_TxCpltCallback_2(UART_HandleTypeDef *hu)
+{
+  if (hu == huart)
+  {
+    wr_busy = 0;
   }
 }
 

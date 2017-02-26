@@ -60,14 +60,13 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 uint32_t TxReadPtr;
 
+extern USBD_HandleTypeDef hUsbDevice;
 extern UART_HandleTypeDef huart1;
+TIM_HandleTypeDef htim3;
 
 #define DMA_WRITE_PTR ( (APP_TX_DATA_SIZE - __HAL_DMA_GET_COUNTER(huart1.hdmarx)) & (APP_TX_DATA_SIZE - 1) )
 
-UART_HandleTypeDef huart1;
-TIM_HandleTypeDef htim3;
 
-extern USBD_HandleTypeDef hUsbDevice;
   
 static int8_t CDC_Init_FS     (void);
 static int8_t CDC_DeInit_FS   (void);
@@ -226,18 +225,20 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   return (USBD_OK);
 }
 
+extern void HAL_TIM_PeriodElapsedCallback_2(TIM_HandleTypeDef *htim);
+
 /**
   * @brief  TIM period elapsed callback
   * @param  htim: TIM handle
   * @retval None
   */
-void HAL_TIM_PeriodElapsedCallback_(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  uint32_t buffsize;
-  uint32_t writeptr = DMA_WRITE_PTR;
-
   if (htim->Instance==TIM3)
   {
+    uint32_t buffsize;
+    uint32_t writeptr = DMA_WRITE_PTR;
+
     if (TxReadPtr != writeptr)
     {
       if (TxReadPtr > writeptr)
@@ -262,6 +263,10 @@ void HAL_TIM_PeriodElapsedCallback_(TIM_HandleTypeDef *htim)
       }
     }
   }
+  else
+  {
+    HAL_TIM_PeriodElapsedCallback_2(htim);
+  }
 }
 
 /**
@@ -281,10 +286,19 @@ void HAL_TIM_PeriodElapsedCallback_(TIM_HandleTypeDef *htim)
   */
 static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 {
-  while (huart1.gState != HAL_UART_STATE_READY) ;
+  char buff[64];
+  memcpy(buff, Buf, *Len);
+  buff[*Len] = 0;
+  printf("CDC Receive: %s, %d\n", buff, *Len);
+
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, SET);
+
+//  while (huart1.gState != HAL_UART_STATE_READY) ;
   HAL_UART_Transmit_DMA(&huart1, Buf, *Len);
   return (USBD_OK);
 }
+
+extern void HAL_UART_TxCpltCallback_2(UART_HandleTypeDef *huart);
 
 /**
   * @brief  Tx Transfer completed callback
@@ -293,8 +307,18 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
   */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  /* Initiate next USB packet transfer once UART completes transfer (transmitting data over Tx line) */
-  USBD_CDC_ReceivePacket(&hUsbDevice);
+  if (huart->Instance == USART1)
+  {
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, RESET);
+
+    printf("CDC Transmit Cplt\n");
+    /* Initiate next USB packet transfer once UART completes transfer (transmitting data over Tx line) */
+    USBD_CDC_ReceivePacket(&hUsbDevice);
+  }
+  else
+  {
+    HAL_UART_TxCpltCallback_2(huart);
+  }
 }
 
 
