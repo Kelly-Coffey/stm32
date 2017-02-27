@@ -7,7 +7,8 @@
 #include "usbd_customhid.h"
 #include "usbd_cdc.h"
 
-#define USB_COMPOSITE_CONFIG_DESC_SIZ   41
+#define USB_COMPOSITE_CONFIG_DESC_SIZ   107
+/* CDC(IA) + HID: 107 */
 /* HID:41 */
 /* CDC:67 */
 
