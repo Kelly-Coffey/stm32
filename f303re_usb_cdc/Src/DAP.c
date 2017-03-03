@@ -19,18 +19,13 @@
  * limitations under the License.
  */
 
-#include "stm32f3xx_hal.h"
 #include "main.h"
+#include "stm32f3xx_hal.h"
 #include "string.h"
 #include "DAP.h"
+#include "DAP_config.h"
 
 #define DAP_FW_VER      "1.0"   // Firmware Version
-
-#define CPU_CLOCK             48000000        ///< Specifies the CPU Clock in Hz
-#define IO_PORT_WRITE_CYCLES  2 ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
-
-#define DAP_PACKET_SIZE       64
-#define DAP_PACKET_COUNT      1
 
 DAP_Data_t DAP_Data;            // DAP Data
 __IO uint8_t DAP_TransferAbort; // Transfer Abort Flag
@@ -42,17 +37,17 @@ static void PORT_SWD_SETUP(void)
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SWCLK_GPIO_Port, SWCLK_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SWDIO_GPIO_Port, SWDIO_Pin, GPIO_PIN_SET);
+  GPIOB->BSRR = (SWCLK_Pin | SWDIO_Pin);
+  GPIOB->BRR  = SWRST_Pin;
 
   /*Configure GPIO pin : SWDIO_Pin & SWCLK_Pin */
   GPIO_InitStruct.Pin = SWDIO_Pin | SWCLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
 
-  HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
+  PIN_nRESET_HIGH();
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -63,146 +58,10 @@ static void PORT_OFF(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct;
 
-  /*Configure GPIO pin : SWDIO_Pin & SWCLK_Pin */
-  GPIO_InitStruct.Pin = SWDIO_Pin | SWCLK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
-
-  HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
-}
-
-// SWCLK/TCK I/O pin -------------------------------------
-
-/** SWCLK/TCK I/O pin: Get Input.
-\return Current status of the SWCLK/TCK DAP hardware I/O pin.
-*/
-static uint32_t PIN_SWCLK_TCK_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWCLK_GPIO_Port, SWCLK_Pin);
-}
-
-/** SWCLK/TCK I/O pin: Set Output to High.
-Set the SWCLK/TCK DAP hardware I/O pin to high level.
-*/
-static void     PIN_SWCLK_TCK_SET(void)
-{
-  HAL_GPIO_WritePin(SWCLK_GPIO_Port, SWCLK_Pin, SET);
-}
-
-/** SWCLK/TCK I/O pin: Set Output to Low.
-Set the SWCLK/TCK DAP hardware I/O pin to low level.
-*/
-static void     PIN_SWCLK_TCK_CLR(void)
-{
-  HAL_GPIO_WritePin(SWCLK_GPIO_Port, SWCLK_Pin, RESET);
-}
-
-// SWDIO/TMS Pin I/O --------------------------------------
-
-/** SWDIO/TMS I/O pin: Get Input.
-\return Current status of the SWDIO/TMS DAP hardware I/O pin.
-*/
-static uint32_t PIN_SWDIO_TMS_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWDIO_GPIO_Port, SWDIO_Pin);
-}
-
-/** SWDIO/TMS I/O pin: Set Output to High.
-Set the SWDIO/TMS DAP hardware I/O pin to high level.
-*/
-static void     PIN_SWDIO_TMS_SET(void)
-{
-  HAL_GPIO_WritePin(SWDIO_GPIO_Port, SWDIO_Pin, SET);
-}
-
-/** SWDIO/TMS I/O pin: Set Output to Low.
-Set the SWDIO/TMS DAP hardware I/O pin to low level.
-*/
-static  void     PIN_SWDIO_TMS_CLR(void)
-{
-  HAL_GPIO_WritePin(SWDIO_GPIO_Port, SWDIO_Pin, RESET);
-}
-
-/** SWDIO I/O pin: Get Input (used in SWD mode only).
-\return Current status of the SWDIO DAP hardware I/O pin.
-*/
-static  uint32_t PIN_SWDIO_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWDIO_GPIO_Port, SWDIO_Pin);
-}
-
-/** SWDIO I/O pin: Set Output (used in SWD mode only).
-\param bit Output value for the SWDIO DAP hardware I/O pin.
-*/
-static  void     PIN_SWDIO_OUT(uint32_t bit)
-{
-  if (bit & 0x1) {
-    HAL_GPIO_WritePin(SWDIO_GPIO_Port, SWDIO_Pin, SET);
-  } else {
-    HAL_GPIO_WritePin(SWDIO_GPIO_Port, SWDIO_Pin, RESET);
-  }
-}
-
-/** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
-Configure the SWDIO DAP hardware I/O pin to output mode. This function is
-called prior \ref PIN_SWDIO_OUT function calls.
-*/
-static  void     PIN_SWDIO_OUT_ENABLE(void)
-{
-#if 0
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  GPIO_InitStruct.Pin = SWDIO_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
-#else
-  GPIOB->MODER |= GPIO_MODER_MODER4_0;
-#endif  
-}
-
-/** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
-Configure the SWDIO DAP hardware I/O pin to input mode. This function is
-called prior \ref PIN_SWDIO_IN function calls.
-*/
-static  void     PIN_SWDIO_OUT_DISABLE(void)
-{
-#if 0
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  GPIO_InitStruct.Pin = SWDIO_Pin;
+  GPIO_InitStruct.Pin = SWDIO_Pin | SWCLK_Pin | SWRST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SWDIO_GPIO_Port, &GPIO_InitStruct);
-#else
-  GPIOB->MODER &= ~GPIO_MODER_MODER4_0;
-#endif  
-}
-
-// nRESET Pin I/O------------------------------------------
-
-/** nRESET I/O pin: Get Input.
-\return Current status of the nRESET DAP hardware I/O pin.
-*/
-static  uint32_t PIN_nRESET_IN(void)
-{
-  return HAL_GPIO_ReadPin(SWRST_GPIO_Port, SWRST_Pin);
-}
-
-/** nRESET I/O pin: Set Output.
-\param bit target device hardware reset pin status:
-           - 0: issue a device hardware reset.
-           - 1: release device hardware reset.
-*/
-static  void     PIN_nRESET_OUT(uint32_t bit)
-{
-  if (bit) {
-    HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_SET);
-  } else {
-    HAL_GPIO_WritePin(SWRST_GPIO_Port, SWRST_Pin, GPIO_PIN_RESET);
-  }
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 // Get DAP Information
@@ -863,4 +722,6 @@ void DAP_Setup(void) {
 //DAP_Data.transfer.match_mask  = 0x000000;
   DAP_Data.swd_conf.turnaround  = 1;
 //DAP_Data.swd_conf.data_phase  = 0;
+
+  PORT_OFF();
 }

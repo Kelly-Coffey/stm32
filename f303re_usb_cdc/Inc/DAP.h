@@ -169,11 +169,9 @@ extern uint32_t DAP_ProcessCommand (uint8_t *request, uint8_t *response);
 extern void     DAP_Setup (void);
 
 // Configurable delay for clock generation
-#ifndef DELAY_SLOW_CYCLES
 #define DELAY_SLOW_CYCLES       3       // Number of cycles for one iteration
-#endif
-static void PIN_DELAY_SLOW (uint32_t delay) {
-  __IO int32_t count;
+static inline __attribute__((always_inline)) void PIN_DELAY_SLOW (uint32_t delay) {
+  volatile int32_t count;
 
   count = delay;
   while (--count);
