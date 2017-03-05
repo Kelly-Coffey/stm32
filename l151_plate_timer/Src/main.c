@@ -49,6 +49,7 @@ TIM_HandleTypeDef htim10;
 const uint16_t digdata[] = {0x00e7, 0x0021, 0x00cb, 0x006b, 0x002d, 0x06e, 0x00ee, 0x0023, 0x00ef, 0x006f};
 const uint32_t resetdigit = 0x00ff0700;
 
+__IO uint8_t update;
 __IO uint16_t leddat[] = {0x0000, 0x0000, 0x0000};
 
 /* USER CODE END PV */
@@ -79,50 +80,50 @@ uint32_t xorshift(void)
   return y = y ^ (y << 5);
 }
 
-void update_seg(void)
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  xorshift();
+  if (htim->Instance == TIM3) {
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+      GPIOA->BSRR = resetdigit;
+      GPIOA->BSRR = leddat[0] | 0x01000000;
+    } else
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
+      GPIOA->BSRR = resetdigit;
+      GPIOA->BSRR = leddat[1] | 0x02000000;
+    } else
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3) {
+      GPIOA->BSRR = resetdigit;
+      GPIOA->BSRR = leddat[2] | 0x04000000;
+    }
+  }
+}
 
-  if (__HAL_TIM_GET_FLAG(&htim3, TIM_IT_CC1)) {
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_CC1);
-    GPIOA->BSRR = resetdigit;
-    GPIOA->BSRR = leddat[0] | 0x01000000;
-  }
-  else
-  if (__HAL_TIM_GET_FLAG(&htim3, TIM_IT_CC2)) {
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_CC2);
-    GPIOA->BSRR = resetdigit;
-    GPIOA->BSRR = leddat[1] | 0x02000000;
-  }
-  else
-  if (__HAL_TIM_GET_FLAG(&htim3, TIM_IT_CC3)) {
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_CC3);
-    GPIOA->BSRR = resetdigit;
-    GPIOA->BSRR = leddat[2] | 0x04000000;
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM3) {
+    update = 1;
   }
 }
 
 uint32_t time_set(void)
 {
   uint32_t cnt;
+
   do {
-    update_seg();
+    xorshift();
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
-    if (__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE)) {
-      __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
- 
-      cnt = __HAL_TIM_GET_COUNTER(&htim2);
-      if (cnt >= 20) {
-        leddat[1] = digdata[(cnt/2) % 10] | 0x0010 ;
-        leddat[2] = digdata[(cnt/20) % 10];
-      } else {
-        leddat[1] = digdata[(cnt/2) % 10] | 0x0010 ;
-        leddat[2] = 0x0000;
-      }
-
-      cnt = __HAL_TIM_GET_COUNTER(&htim4);
-      leddat[0] = digdata[cnt/2];
+    cnt = __HAL_TIM_GET_COUNTER(&htim2);
+    if (cnt >= 20) {
+      leddat[1] = digdata[(cnt/2) % 10] | 0x0010 ;
+      leddat[2] = digdata[(cnt/20) % 10];
+    } else {
+      leddat[1] = digdata[(cnt/2) % 10] | 0x0010 ;
+      leddat[2] = 0x0000;
     }
+
+    cnt = __HAL_TIM_GET_COUNTER(&htim4);
+    leddat[0] = digdata[cnt/2];
 
     if (HAL_GPIO_ReadPin(SW_GPIO_Port, SW_Pin) == RESET) {
       cnt = (__HAL_TIM_GET_COUNTER(&htim2)/2)*10 + __HAL_TIM_GET_COUNTER(&htim4)/2;
@@ -140,21 +141,23 @@ void countdown(uint32_t cnt)
   uint32_t t = 0;
   uint32_t buzz = 5;
 
-  __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
-  while ( !__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE) ) {
-    update_seg();
+  update = 0;
+  while (update == 0) {
+    xorshift();
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
   }
-  __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+  update = 0;
+  while (update == 0) ;
 
   MX_TIM10_Init();
   HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
 
   while (cnt) {
+    xorshift();
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
-    update_seg();
-
-    if (!__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE) ) continue;
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+    if (update == 0) continue;
+    update = 0;
 
     if (++t < 10) continue;
     t = 0;
@@ -186,10 +189,11 @@ void plock(void)
   uint32_t cnt = 50;
 
   while (cnt) {
-    update_seg();
+    xorshift();
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
-    if (!__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE) ) continue;
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+    if (update == 0) continue;
+    update = 0;
 
     --cnt;
   }
@@ -200,10 +204,11 @@ void plock(void)
   cnt = 250;
 
   while (cnt) {
-    update_seg();
+    xorshift();
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
-    if (!__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE) ) continue;
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+    if (update == 0) continue;
+    update = 0;
 
     --cnt;
   }
@@ -234,7 +239,6 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
-  MX_TIM10_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -251,9 +255,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   HAL_TIM_Base_Start(&htim3);
   __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3);
+  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_CC1);
+  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_CC2);
+  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_CC3);
 
-  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim4, TIM_CHANNEL_ALL);
   uint32_t count = 50;
 
   while (1)
@@ -273,9 +281,12 @@ int main(void)
       uint32_t delay = (xorshift() % 200) + 150;
       __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
       while (delay) {
-        update_seg();
-        if ( !__HAL_TIM_GET_FLAG(&htim3, TIM_IT_UPDATE) ) continue;
-        __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+        xorshift();
+        HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+
+        if (update == 0) continue;
+        update = 0;
+
         --delay;
       }
     }
