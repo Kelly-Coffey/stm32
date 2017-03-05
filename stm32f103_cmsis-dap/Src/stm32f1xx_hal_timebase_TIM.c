@@ -44,20 +44,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_tim.h"
-/** @addtogroup STM32F7xx_HAL_Examples
-  * @{
-  */
-
-/** @addtogroup HAL_TimeBase
-  * @{
-  */ 
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef        htim2; 
-uint32_t                 uwIncrementState = 0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -76,6 +67,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   uint32_t              uwTimclock = 0;
   uint32_t              uwPrescalerValue = 0;
   uint32_t              pFLatency;
+  TIM_HandleTypeDef        htim2; 
   
   /*Configure the TIM2 IRQ priority */
   HAL_NVIC_SetPriority(TIM2_IRQn, TickPriority ,0); 
@@ -127,7 +119,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 void HAL_SuspendTick(void)
 {
   /* Disable TIM2 update Interrupt */
-  __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_UPDATE);                                                  
+  TIM2->DIER &= ~(TIM_IT_UPDATE);
 }
 
 /**
@@ -139,15 +131,6 @@ void HAL_SuspendTick(void)
 void HAL_ResumeTick(void)
 {
   /* Enable TIM2 Update interrupt */
-  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
+  TIM2->DIER |= ~(TIM_IT_UPDATE);
 }
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

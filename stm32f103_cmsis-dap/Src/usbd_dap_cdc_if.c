@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file           : usbd_cdc_if.c
+  * @file           : usbd_dap_cdc_if.c
   * @brief          :
   ******************************************************************************
   *
@@ -42,54 +42,24 @@
 */
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbd_cdc_if.h"
-/* USER CODE BEGIN INCLUDE */
-/* USER CODE END INCLUDE */
+#include "usbd_dap_cdc_if.h"
+#include "DAP.h"
 
-/** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
-  * @{
-  */
-
-/** @defgroup USBD_CDC 
-  * @brief usbd core module
-  * @{
-  */ 
-
-/** @defgroup USBD_CDC_Private_TypesDefinitions
-  * @{
-  */ 
-/* USER CODE BEGIN PRIVATE_TYPES */
-/* USER CODE END PRIVATE_TYPES */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CDC_Private_Defines
-  * @{
-  */ 
-/* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  4
-#define APP_TX_DATA_SIZE  4
-/* USER CODE END PRIVATE_DEFINES */
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CDC_Private_Macros
-  * @{
-  */ 
-/* USER CODE BEGIN PRIVATE_MACRO */
-/* USER CODE END PRIVATE_MACRO */
-
-/**
-  * @}
-  */ 
+#define APP_RX_DATA_SIZE  2048
+#define APP_TX_DATA_SIZE  2048
   
-/** @defgroup USBD_CDC_Private_Variables
-  * @{
-  */
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
+static int8_t DAP_CDC_Init     (void);
+static int8_t DAP_CDC_DeInit   (void);
+static int8_t DAP_OutEvent     (uint8_t* event_idx);
+static int8_t CDC_Control      (uint8_t cmd, uint8_t* pbuf, uint16_t length);
+static int8_t CDC_Receive      (uint8_t* pbuf, uint32_t *Len);
+
+uint8_t SendBuffer[USBD_DAP_OUTREPORT_BUF_SIZE];
+
 /* Create buffer for reception and transmission           */
 /* It's up to user to redefine and/or remove those define */
 /* Received Data over USB are stored in this buffer       */
@@ -98,62 +68,61 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 /* Send Data over USB CDC are stored in this buffer       */
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
-/* USER CODE BEGIN PRIVATE_VARIABLES */
-/* USER CODE END PRIVATE_VARIABLES */
-
-/**
-  * @}
-  */ 
-  
-/** @defgroup USBD_CDC_IF_Exported_Variables
-  * @{
-  */ 
-  extern USBD_HandleTypeDef hUsbDeviceFS;
-/* USER CODE BEGIN EXPORTED_VARIABLES */
-/* USER CODE END EXPORTED_VARIABLES */
-
-/**
-  * @}
-  */ 
-  
-/** @defgroup USBD_CDC_Private_FunctionPrototypes
-  * @{
-  */
-static int8_t CDC_Init_FS     (void);
-static int8_t CDC_DeInit_FS   (void);
-static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t CDC_Receive_FS  (uint8_t* pbuf, uint32_t *Len);
-
-/* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
-/* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
-
-/**
-  * @}
-  */ 
-  
-USBD_CDC_ItfTypeDef USBD_Interface_fops_FS = 
+static uint8_t DAP_ReportDesc[USBD_DAP_REPORT_DESC_SIZE] =
 {
-  CDC_Init_FS,
-  CDC_DeInit_FS,
-  CDC_Control_FS,  
-  CDC_Receive_FS
+  0x06, 0x00, 0xFF,      /* USAGE_PAGE (Vendor Page: 0xFF00) */
+  0x09, 0x01,            /* USAGE (Demo Kit)               */
+  0xa1, 0x01,            /* COLLECTION (Application)       */
+  /* 7 */
+
+  0x15, 0x00,            /*     LOGICAL_MINIMUM (0)        */
+  0x26, 0xFF, 0x00,      /*     LOGICAL_MAXIMUM (255)      */           
+  0x75, 0x08,            /*     REPORT_SIZE (8 bit)        */    
+  0x95, 0x40,            /*     REPORT_COUNT (0x40)        */
+  /* 16 */
+
+  0x09, 0x01,            /* USAGE (Demo Kit)               */
+  0x81, 0x02,            /* INPUT (Array)                  */
+  0x95, 0x40,            /*     REPORT_COUNT (0x40)        */
+  /* 22 */
+
+  0x09, 0x01,            /* USAGE (Demo Kit)               */
+  0x91, 0x02,            /* OUTPUT (Array)                 */
+  0x95, 0x01,            /*     REPORT_COUNT (1)           */
+  /* 28 */
+
+  0x09, 0x01,            /* USAGE (Demo Kit)               */
+  0xB1, 0x02,            /*     FEATURE (Array)            */
+  /* 32 */
+
+  0xc0                   /*     END_COLLECTION             */
+};
+
+USBD_DAP_CDC_ItfTypeDef USBD_Interface_fops = 
+{
+  DAP_ReportDesc,
+  DAP_CDC_Init,
+  DAP_CDC_DeInit,
+  DAP_OutEvent,
+
+  CDC_Control,  
+  CDC_Receive
 };
 
 /* Private functions ---------------------------------------------------------*/
 /**
-  * @brief  CDC_Init_FS
+  * @brief  DAP_CDC_Init
   *         Initializes the CDC media low layer over the FS USB IP
   * @param  None
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Init_FS(void)
+static int8_t DAP_CDC_Init(void)
 { 
-  /* USER CODE BEGIN 3 */ 
   /* Set Application Buffers */
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+
   return (USBD_OK);
-  /* USER CODE END 3 */ 
 }
 
 /**
@@ -162,24 +131,39 @@ static int8_t CDC_Init_FS(void)
   * @param  None
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_DeInit_FS(void)
+static int8_t DAP_CDC_DeInit(void)
 {
-  /* USER CODE BEGIN 4 */ 
   return (USBD_OK);
-  /* USER CODE END 4 */ 
 }
 
 /**
-  * @brief  CDC_Control_FS
+  * @brief  DAP_OutEvent
+  *         Manage the DAP(HID) class Out Event    
+  * @param  request: received HID report
+  */
+static int8_t DAP_OutEvent  (uint8_t* request)
+{
+  uint32_t length = 0;
+
+  memset(SendBuffer, 0, 64);
+
+  length = DAP_ProcessCommand(request, SendBuffer);
+  
+  USBD_DAP_SendReport(&hUsbDeviceFS, SendBuffer, 64);
+
+  return (0);
+}
+
+/**
+  * @brief  CDC_Control
   *         Manage the CDC class requests
   * @param  cmd: Command code            
   * @param  pbuf: Buffer containing command data (request parameters)
   * @param  length: Number of data to be sent (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
+static int8_t CDC_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 { 
-  /* USER CODE BEGIN 5 */
   switch (cmd)
   {
   case CDC_SEND_ENCAPSULATED_COMMAND:
@@ -240,11 +224,10 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   }
 
   return (USBD_OK);
-  /* USER CODE END 5 */
 }
 
 /**
-  * @brief  CDC_Receive_FS
+  * @brief  CDC_Receive
   *         Data received over USB OUT endpoint are sent over CDC interface 
   *         through this function.
   *           
@@ -258,17 +241,16 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
+static int8_t CDC_Receive (uint8_t* Buf, uint32_t *Len)
 {
-  /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
   return (USBD_OK);
-  /* USER CODE END 6 */ 
 }
 
 /**
-  * @brief  CDC_Transmit_FS
+  * @brief  CDC_Transmit
   *         Data send over USB IN endpoint are sent over CDC interface 
   *         through this function.           
   *         @note
@@ -278,30 +260,18 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
   * @param  Len: Number of data to be send (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
   */
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+uint8_t CDC_Transmit(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
-  /* USER CODE BEGIN 7 */ 
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+
+  USBD_DAP_CDC_HandleTypeDef *hcdc = (USBD_DAP_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
   if (hcdc->TxState != 0){
     return USBD_BUSY;
   }
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
   result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
-  /* USER CODE END 7 */ 
   return result;
 }
-
-/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
-/* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

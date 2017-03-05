@@ -55,55 +55,22 @@
 #include "stm32f1xx_hal.h"
 #include "usbd_def.h"
 
-/** @addtogroup USBD_OTG_DRIVER
-  * @{
-  */
-  
-/** @defgroup USBD_CONF
-  * @brief usb otg low level driver configuration file
-  * @{
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Defines
-  * @{
-  */ 
-
-/*---------- -----------*/
-#define USBD_MAX_NUM_INTERFACES     2
-/*---------- -----------*/
+#define USBD_MAX_NUM_INTERFACES        2
 #define USBD_MAX_NUM_CONFIGURATION     1
-/*---------- -----------*/
-#define USBD_MAX_STR_DESC_SIZ     64
-/*---------- -----------*/
-#define USBD_SUPPORT_USER_STRING     1
-/*---------- -----------*/
-#define USBD_DEBUG_LEVEL     0
-/*---------- -----------*/
-#define USBD_SELF_POWERED     1
-/*---------- -----------*/
-#define USBD_CDC_INTERVAL     1000
-/*---------- -----------*/
-#define MAX_STATIC_ALLOC_SIZE     512
-/****************************************/
+#define USBD_MAX_STR_DESC_SIZ         64
+#define USBD_SUPPORT_USER_STRING       1
+#define USBD_DEBUG_LEVEL               0
+#define USBD_SELF_POWERED              1
+
 /* #define for FS and HS identification */
 #define DEVICE_FS 		0
 
-/** @defgroup USBD_Exported_Macros
-  * @{
-  */ 
+#define USBD_DAP_OUTREPORT_BUF_SIZE   64
+#define USBD_DAP_REPORT_DESC_SIZE     33
 
-/* Memory management macros */  
-#define USBD_malloc               (uint32_t *)USBD_static_malloc
-#define USBD_free                 USBD_static_free
-#define USBD_memset               /* Not used */
-#define USBD_memcpy               /* Not used */
+/* USBD_Exported_Macros */ 
 
 #define USBD_Delay   HAL_Delay
-
-/* For footprint reasons and since only one allocation is handled in the HID class
-   driver, the malloc/free is changed into a static allocation method */
-void *USBD_static_malloc(uint32_t size);
-void USBD_static_free(void *p);    
 
 /* DEBUG macros */    
 #if (USBD_DEBUG_LEVEL > 0)
@@ -131,56 +98,12 @@ void USBD_static_free(void *p);
 #else
 #define USBD_DbgLog(...)                         
 #endif
-                            
-/**
-  * @}
-  */ 
- 
-    
-    
-/**
-  * @}
-  */ 
 
-/** @defgroup USBD_CONF_Exported_Types
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Macros
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_Variables
-  * @{
-  */ 
-/**
-  * @}
-  */ 
-
-/** @defgroup USBD_CONF_Exported_FunctionsPrototype
-  * @{
-  */ 
-/**
-  * @}
-  */ 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /*__USBD_CONF__H__*/
 
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
