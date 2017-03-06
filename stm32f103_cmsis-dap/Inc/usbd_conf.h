@@ -44,9 +44,7 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USBD_CONF__H__
 #define __USBD_CONF__H__
-#ifdef __cplusplus
- extern "C" {
-#endif
+
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,10 +95,6 @@
                             printf("\n");
 #else
 #define USBD_DbgLog(...)                         
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /*__USBD_CONF__H__*/

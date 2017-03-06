@@ -409,4 +409,3 @@ static void ComPort_Config(void)
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
