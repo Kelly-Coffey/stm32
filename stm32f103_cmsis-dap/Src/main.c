@@ -70,6 +70,9 @@ static void MX_TIM4_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 
+extern void HAL_UART2_TxCpltCallback();
+extern void HAL_TIM4_PeriodElapsedCallback();
+
 int main(void)
 {
   /* MCU Configuration----------------------------------------------------------*/
@@ -88,7 +91,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USB_DEVICE_Init();
-
 
   /* Infinite loop */
   while (1)
@@ -185,9 +187,9 @@ static void MX_TIM4_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 0;
+  htim4.Init.Prescaler = 5000-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 0;
+  htim4.Init.Period = 72-1;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
@@ -331,8 +333,24 @@ static void MX_GPIO_Init(void)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+  if (htim->Instance == TIM4)
+  {
+    HAL_TIM4_PeriodElapsedCallback();
+  }
 }
 
+/**
+  * @brief  Tx Transfer completed callback
+  * @param  huart: UART handle
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART2)
+  {
+    HAL_UART2_TxCpltCallback();
+  }
+}
 /**
   * @brief  This function is executed in case of error occurrence.
   * @param  None

@@ -5,7 +5,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include  "usbd_ioreq.h"
 
-#define USB_DAP_CDC_CONFIG_DESC_SIZ   41
+#define USB_DAP_CDC_CONFIG_DESC_SIZ   107
 /* DAP + CDC(IA) : 107 */
 /* DAP:41 */
 /* CDC:67 */
@@ -65,6 +65,14 @@ typedef enum
   DAP_BUSY,
 }
 DAP_StateTypeDef; 
+
+typedef struct
+{
+  uint32_t bitrate;
+  uint8_t  format;
+  uint8_t  paritytype;
+  uint8_t  datatype;
+}USBD_CDC_LineCodingTypeDef;
 
 typedef struct _USBD_DAP_CDC_Itf
 {

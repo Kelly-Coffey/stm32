@@ -45,11 +45,6 @@
 #include "usbd_dap_cdc_if.h"
 #include "DAP.h"
 
-/* Define size for the receive and transmit buffer over CDC */
-/* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  2048
-#define APP_TX_DATA_SIZE  2048
-  
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 static int8_t DAP_CDC_Init     (void);
@@ -59,14 +54,6 @@ static int8_t CDC_Control      (uint8_t cmd, uint8_t* pbuf, uint16_t length);
 static int8_t CDC_Receive      (uint8_t* pbuf, uint32_t *Len);
 
 uint8_t SendBuffer[USBD_DAP_OUTREPORT_BUF_SIZE];
-
-/* Create buffer for reception and transmission           */
-/* It's up to user to redefine and/or remove those define */
-/* Received Data over USB are stored in this buffer       */
-uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
-
-/* Send Data over USB CDC are stored in this buffer       */
-uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 static uint8_t DAP_ReportDesc[USBD_DAP_REPORT_DESC_SIZE] =
 {
@@ -98,6 +85,32 @@ static uint8_t DAP_ReportDesc[USBD_DAP_REPORT_DESC_SIZE] =
   0xc0                   /*     END_COLLECTION             */
 };
 
+USBD_CDC_LineCodingTypeDef LineCoding =
+  {
+    115200, /* baud rate*/
+    0x00,   /* stop bits-1*/
+    0x00,   /* parity - none*/
+    0x08    /* nb. of bits 8*/
+  };
+
+/* Create buffer for reception and transmission           */
+/* It's up to user to redefine and/or remove those define */
+/* Received Data over USB are stored in this buffer       */
+uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
+
+/* Send Data over USB CDC are stored in this buffer       */
+uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
+uint32_t TxReadPtr;
+
+extern UART_HandleTypeDef huart2;
+extern TIM_HandleTypeDef htim4;
+
+#define DMA_WRITE_PTR ( (APP_TX_DATA_SIZE - __HAL_DMA_GET_COUNTER(huart2.hdmarx)) & (APP_TX_DATA_SIZE - 1) )
+
+static void ComPort_Config(void);
+
+extern void Error_Handler(void);
+
 USBD_DAP_CDC_ItfTypeDef USBD_Interface_fops = 
 {
   DAP_ReportDesc,
@@ -118,6 +131,10 @@ USBD_DAP_CDC_ItfTypeDef USBD_Interface_fops =
   */
 static int8_t DAP_CDC_Init(void)
 { 
+  DAP_Setup();
+
+  HAL_TIM_Base_Start_IT(&htim4);
+
   /* Set Application Buffers */
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
@@ -133,6 +150,8 @@ static int8_t DAP_CDC_Init(void)
   */
 static int8_t DAP_CDC_DeInit(void)
 {
+  HAL_TIM_Base_Stop_IT(&htim4);
+
   return (USBD_OK);
 }
 
@@ -204,10 +223,25 @@ static int8_t CDC_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
   case CDC_SET_LINE_CODING:   
-	
+    LineCoding.bitrate    = (uint32_t)(pbuf[0] | (pbuf[1] << 8) |\
+                            (pbuf[2] << 16) | (pbuf[3] << 24));
+    LineCoding.format     = pbuf[4];
+    LineCoding.paritytype = pbuf[5];
+    LineCoding.datatype   = pbuf[6];
+    
+    /* Set the new configuration */
+    ComPort_Config();
+
     break;
 
   case CDC_GET_LINE_CODING:     
+    pbuf[0] = (uint8_t)(LineCoding.bitrate);
+    pbuf[1] = (uint8_t)(LineCoding.bitrate >> 8);
+    pbuf[2] = (uint8_t)(LineCoding.bitrate >> 16);
+    pbuf[3] = (uint8_t)(LineCoding.bitrate >> 24);
+    pbuf[4] = LineCoding.format;
+    pbuf[5] = LineCoding.paritytype;
+    pbuf[6] = LineCoding.datatype;
 
     break;
 
@@ -227,6 +261,39 @@ static int8_t CDC_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 }
 
 /**
+  * @brief  TIM4 period elapsed callback
+  * @retval None
+  */
+void HAL_TIM4_PeriodElapsedCallback(void)
+{
+  uint32_t buffsize;
+  uint32_t writeptr = DMA_WRITE_PTR;
+
+  if (TxReadPtr != writeptr)
+  {
+    if (TxReadPtr > writeptr)
+    {
+      buffsize = APP_TX_DATA_SIZE - TxReadPtr;
+    }
+    else
+    {
+      buffsize = writeptr - TxReadPtr;
+    }
+
+    USBD_CDC_SetTxBuffer(&hUsbDeviceFS, (uint8_t*)&UserTxBufferFS[TxReadPtr], buffsize);
+
+    if(USBD_CDC_TransmitPacket(&hUsbDeviceFS) == USBD_OK)
+    {
+      TxReadPtr += buffsize;
+      if (TxReadPtr == APP_RX_DATA_SIZE)
+      {
+        TxReadPtr = 0;
+      }
+    }
+  }
+}
+
+/**
   * @brief  CDC_Receive
   *         Data received over USB OUT endpoint are sent over CDC interface 
   *         through this function.
@@ -243,34 +310,102 @@ static int8_t CDC_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Receive (uint8_t* Buf, uint32_t *Len)
 {
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  HAL_UART_Transmit_DMA(&huart2, Buf, *Len);
 
   return (USBD_OK);
 }
 
 /**
-  * @brief  CDC_Transmit
-  *         Data send over USB IN endpoint are sent over CDC interface 
-  *         through this function.           
-  *         @note
-  *         
-  *                 
-  * @param  Buf: Buffer of data to be send
-  * @param  Len: Number of data to be send (in bytes)
-  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
+  * @brief  USART2 Tx Transfer completed callback
+  * @retval None
   */
-uint8_t CDC_Transmit(uint8_t* Buf, uint16_t Len)
+void HAL_UART2_TxCpltCallback(void)
 {
-  uint8_t result = USBD_OK;
+  /* Initiate next USB packet transfer once UART completes transfer (transmitting data over Tx line) */
+  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+}
 
-  USBD_DAP_CDC_HandleTypeDef *hcdc = (USBD_DAP_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
+/**
+  * @brief  ComPort_Config
+  *         Configure the COM Port with the parameters received from host.
+  * @param  None.
+  * @retval None.
+  * @note   When a configuration is not supported, a default value is used.
+  */
+static void ComPort_Config(void)
+{
+  if(HAL_UART_DeInit(&huart2) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
   }
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
-  return result;
+  
+  /* set the Stop bit */
+  switch (LineCoding.format)
+  {
+  case 0:
+    huart2.Init.StopBits = UART_STOPBITS_1;
+    break;
+  case 2:
+    huart2.Init.StopBits = UART_STOPBITS_2;
+    break;
+  default :
+    huart2.Init.StopBits = UART_STOPBITS_1;
+    break;
+  }
+  
+  /* set the parity bit*/
+  switch (LineCoding.paritytype)
+  {
+  case 0:
+    huart2.Init.Parity = UART_PARITY_NONE;
+    break;
+  case 1:
+    huart2.Init.Parity = UART_PARITY_ODD;
+    break;
+  case 2:
+    huart2.Init.Parity = UART_PARITY_EVEN;
+    break;
+  default :
+    huart2.Init.Parity = UART_PARITY_NONE;
+    break;
+  }
+  
+  /*set the data type : only 8bits and 9bits is supported */
+  switch (LineCoding.datatype)
+  {
+  case 0x07:
+    /* With this configuration a parity (Even or Odd) must be set */
+    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    break;
+  case 0x08:
+    if(huart2.Init.Parity == UART_PARITY_NONE)
+    {
+      huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    }
+    else 
+    {
+      huart2.Init.WordLength = UART_WORDLENGTH_9B;
+    }
+    
+    break;
+  default :
+    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    break;
+  }
+  
+  huart2.Init.BaudRate   = LineCoding.bitrate;
+  huart2.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  huart2.Init.Mode       = UART_MODE_TX_RX;
+  
+  if(HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+
+  HAL_UART_Receive_DMA(&huart2, UserTxBufferFS, APP_RX_DATA_SIZE);
+  TxReadPtr = 0;
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

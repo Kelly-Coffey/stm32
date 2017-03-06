@@ -43,7 +43,7 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   USB_DESC_TYPE_CONFIGURATION,   /* bDescriptorType: Configuration */
   USB_DAP_CDC_CONFIG_DESC_SIZ,   /* wTotalLength: Bytes returned */
   0x00,
-  0x01,         /*bNumInterfaces: CDC:2 HID:1 interface*/
+  0x03,         /*bNumInterfaces: CDC:2 HID:1 interface*/
   0x01,         /*bConfigurationValue: Configuration value*/
   0x04,         /*iConfiguration: Index of string descriptor describing the configuration*/
   0xC0,         /*bmAttributes: bus powered */
@@ -96,30 +96,30 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   /* 41 */
 #endif
 
-#if 0
+#if 1
   /******************** Descriptor of Interface Association ********************/
   0x08,          /* bLength: InterfaceAssociation Descriptor size */
   0x0B,          /* bDescriptorType: Interface Assocation */
-  0x00,          /* bFirstInterface */
-  0x01,          /* bInterfaceCount */
+  0x01,          /* bFirstInterface */
+  0x02,          /* bInterfaceCount */
   0x02,          /* bInterfaceClass: Communication Interface Class */
   0x02,          /* bInterfaceSubClass: Abstract Control Model */
   0x01,          /* bInterfaceProtocol: Common AT commands */
   0x00,          /* iInterface: */
-  /* 17 */
+  /* 49 */
 
   /*Interface Descriptor */
   0x09,   /* bLength: Interface Descriptor size */
   USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
   /* Interface descriptor type */
-  0x00,   /* bInterfaceNumber: Number of Interface */
+  0x01,   /* bInterfaceNumber: Number of Interface */
   0x00,   /* bAlternateSetting: Alternate setting */
   0x01,   /* bNumEndpoints: One endpoints used */
   0x02,   /* bInterfaceClass: Communication Interface Class */
   0x02,   /* bInterfaceSubClass: Abstract Control Model */
   0x01,   /* bInterfaceProtocol: Common AT commands */
   0x00,   /* iInterface: */
-  /* 26 */
+  /* 58 */
 
   /*Header Functional Descriptor*/
   0x05,   /* bLength: Endpoint Descriptor size */
@@ -127,30 +127,30 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   0x00,   /* bDescriptorSubtype: Header Func Desc */
   0x10,   /* bcdCDC: spec release number */
   0x01,
-  /* 31 */
+  /* 63 */
   
   /*Call Management Functional Descriptor*/
   0x05,   /* bFunctionLength */
   0x24,   /* bDescriptorType: CS_INTERFACE */
   0x01,   /* bDescriptorSubtype: Call Management Func Desc */
   0x00,   /* bmCapabilities: D0+D1 */
-  0x01,   /* bDataInterface: 1 */
-  /* 36 */
+  0x02,   /* bDataInterface: 1 */
+  /* 68 */
 
   /*ACM Functional Descriptor*/
   0x04,   /* bFunctionLength */
   0x24,   /* bDescriptorType: CS_INTERFACE */
   0x02,   /* bDescriptorSubtype: Abstract Control Management desc */
   0x02,   /* bmCapabilities */
-  /* 40 */
+  /* 72 */
   
   /*Union Functional Descriptor*/
   0x05,   /* bFunctionLength */
   0x24,   /* bDescriptorType: CS_INTERFACE */
   0x06,   /* bDescriptorSubtype: Union func desc */
-  0x00,   /* bMasterInterface: Communication class interface */
-  0x01,   /* bSlaveInterface0: Data Class Interface */
-  /* 45 */
+  0x01,   /* bMasterInterface: Communication class interface */
+  0x02,   /* bSlaveInterface0: Data Class Interface */
+  /* 77 */
   
   /*Endpoint Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
@@ -160,21 +160,21 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   LOBYTE(CDC_CMD_PACKET_SIZE),     /* wMaxPacketSize: */
   HIBYTE(CDC_CMD_PACKET_SIZE),
   0x10,                           /* bInterval: */ 
-  /* 52 */
+  /* 84 */
 
   /*---------------------------------------------------------------------------*/
   
   /*Data class interface descriptor*/
   0x09,   /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: */
-  0x01,   /* bInterfaceNumber: Number of Interface */
+  0x02,   /* bInterfaceNumber: Number of Interface */
   0x00,   /* bAlternateSetting: Alternate setting */
   0x02,   /* bNumEndpoints: Two endpoints used */
   0x0A,   /* bInterfaceClass: CDC */
   0x00,   /* bInterfaceSubClass: */
   0x00,   /* bInterfaceProtocol: */
   0x00,   /* iInterface: */
-  /* 61 */
+  /* 93 */
   
   /*Endpoint OUT Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */
@@ -184,7 +184,7 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
   HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
   0x00,                              /* bInterval: ignore for Bulk transfer */
-  /* 68 */
+  /* 100 */
   
   /*Endpoint IN Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */
@@ -194,7 +194,7 @@ static uint8_t USBD_DAP_CDC_CfgDesc[USB_DAP_CDC_CONFIG_DESC_SIZ] =
   LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
   HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
   0x00,                              /* bInterval: ignore for Bulk transfer */
-  /* 75 */
+  /* 107 */
 #endif
 } ;
 
@@ -232,12 +232,38 @@ static uint8_t USBD_DAP_CDC_Init (USBD_HandleTypeDef *pdev, uint8_t cfgidx)
                  USBD_EP_TYPE_INTR,
                  DAP_EPOUT_SIZE);
   
+  /* Open EP IN */
+   USBD_LL_OpenEP(pdev,
+                 CDC_IN_EP,
+                 USBD_EP_TYPE_BULK,
+                 CDC_DATA_FS_IN_PACKET_SIZE);
+    
+  /* Open EP OUT */
+  USBD_LL_OpenEP(pdev,
+                 CDC_OUT_EP,
+                 USBD_EP_TYPE_BULK,
+                 CDC_DATA_FS_OUT_PACKET_SIZE);
+
+  /* Open Command IN EP */
+  USBD_LL_OpenEP(pdev,
+                 CDC_CMD_EP,
+                 USBD_EP_TYPE_INTR,
+                 CDC_CMD_PACKET_SIZE);
+  
   hdapcdc.state = DAP_IDLE;
+
   ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->Init();
+
+  /* Init Xfer states */
+  hdapcdc.TxState =0;
+  hdapcdc.RxState =0;
 
   /* Prepare Out endpoint to receive 1st packet */ 
   USBD_LL_PrepareReceive(pdev, DAP_EPOUT_ADDR, hdapcdc.Report_buf, 
                            USBD_DAP_OUTREPORT_BUF_SIZE);
+
+  USBD_LL_PrepareReceive(pdev, CDC_OUT_EP, hdapcdc.RxBuffer,
+                         CDC_DATA_FS_OUT_PACKET_SIZE);
 
   return USBD_OK;
 }
@@ -258,7 +284,19 @@ static uint8_t USBD_DAP_CDC_DeInit (USBD_HandleTypeDef *pdev, uint8_t cfgidx)
   /* Close CUSTOM_HID EP OUT */
   USBD_LL_CloseEP(pdev,
                   DAP_EPOUT_ADDR);
+
+  /* Close EP IN */
+  USBD_LL_CloseEP(pdev,
+              CDC_IN_EP);
   
+  /* Close EP OUT */
+  USBD_LL_CloseEP(pdev,
+              CDC_OUT_EP);
+  
+  /* Close Command IN EP */
+  USBD_LL_CloseEP(pdev,
+              CDC_CMD_EP);
+
   /* DeInit  physical Interface components */
   ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->DeInit();
 
@@ -266,13 +304,13 @@ static uint8_t USBD_DAP_CDC_DeInit (USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 }
 
 /**
-  * @brief  DAP_Setup
+  * @brief  USBD_DAP_Setup
   *         Handle the DAP specific requests
   * @param  pdev: instance
   * @param  req: usb requests
   * @retval status
   */
-static uint8_t DAP_Setup (USBD_HandleTypeDef *pdev, 
+static uint8_t USBD_DAP_Setup (USBD_HandleTypeDef *pdev, 
                                 USBD_SetupReqTypedef *req)
 {
   switch (req->bRequest)
@@ -312,6 +350,48 @@ static uint8_t DAP_Setup (USBD_HandleTypeDef *pdev,
 }
 
 /**
+  * @brief  USBD_CDC_Setup
+  *         Handle the CDC specific requests
+  * @param  pdev: instance
+  * @param  req: usb requests
+  * @retval status
+  */
+static uint8_t USBD_CDC_Setup (USBD_HandleTypeDef *pdev, 
+                                USBD_SetupReqTypedef *req)
+{
+  if (req->wLength)
+  {
+    if (req->bmRequest & 0x80)
+    {
+      ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->Control(req->bRequest,
+                                            (uint8_t *)hdapcdc.data,
+                                            req->wLength);
+        USBD_CtlSendData (pdev, 
+                          (uint8_t *)hdapcdc.data,
+                          req->wLength);
+    }
+    else
+    {
+      hdapcdc.CmdOpCode = req->bRequest;
+      hdapcdc.CmdLength = req->wLength;
+      
+      USBD_CtlPrepareRx (pdev, 
+                         (uint8_t *)hdapcdc.data,
+                         req->wLength);
+    }
+      
+  }
+  else
+  {
+    ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->Control(req->bRequest,
+                                          (uint8_t*)req,
+                                          0);
+  }
+
+  return USBD_OK;
+}
+
+/**
   * @brief  USBD_DAP_CDC_Setup
   *         Handle the CMSIS-DAP specific requests
   * @param  pdev: instance
@@ -331,11 +411,11 @@ static uint8_t USBD_DAP_CDC_Setup (USBD_HandleTypeDef *pdev,
     {
       case USB_REQ_RECIPIENT_INTERFACE:
         if (req->wIndex == 0) {
-          return DAP_Setup(pdev, req);
+          return USBD_DAP_Setup(pdev, req);
         }
         else
         if (req->wIndex <= 2) {
-//          return CDC_Setup(pdev, req);
+          return USBD_CDC_Setup(pdev, req);
         }
         break;
 
@@ -383,31 +463,6 @@ static uint8_t USBD_DAP_CDC_Setup (USBD_HandleTypeDef *pdev,
 }
 
 /**
-  * @brief  USBD_DAP_SendReport 
-  *         Send DAP HID Report
-  * @param  pdev: device instance
-  * @param  buff: pointer to report
-  * @retval status
-  */
-uint8_t USBD_DAP_SendReport     (USBD_HandleTypeDef  *pdev, 
-                                 uint8_t *report,
-                                 uint16_t len)
-{
-  if (pdev->dev_state == USBD_STATE_CONFIGURED )
-  {
-    if(hdapcdc.state == DAP_IDLE)
-    {
-      hdapcdc.state = DAP_BUSY;
-      USBD_LL_Transmit (pdev, 
-                        DAP_EPIN_ADDR,                                      
-                        report,
-                        len);
-    }
-  }
-  return USBD_OK;
-}
-
-/**
   * @brief  USBD_DAP_CDC_DataIn
   *         handle data IN Stage
   * @param  pdev: device instance
@@ -426,6 +481,8 @@ static uint8_t  USBD_DAP_CDC_DataIn (USBD_HandleTypeDef *pdev,
 
     case 2:
     case 3:
+      hdapcdc.TxState = 0;
+      return USBD_OK;
 
     default:
       break;
@@ -453,6 +510,14 @@ static uint8_t  USBD_DAP_CDC_DataOut (USBD_HandleTypeDef *pdev,
 
     case 2:
     case 3:
+      /* Get the received data length */
+      hdapcdc.RxLength = USBD_LL_GetRxDataSize (pdev, epnum);
+  
+      /* USB data will be immediately processed, this allow next USB traffic being 
+        NAKed till the end of the application Xfer */
+      ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->Receive(hdapcdc.RxBuffer, &hdapcdc.RxLength);
+
+      return USBD_OK;
 
     default:
       break;
@@ -485,6 +550,13 @@ uint8_t USBD_DAP_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev)
           }
           else
           if (pdev->request.wIndex <= 2) {
+            if((pdev->pUserData != NULL) && (hdapcdc.CmdOpCode != 0xFF))
+            {
+              ((USBD_DAP_CDC_ItfTypeDef*)pdev->pUserData)->Control(hdapcdc.CmdOpCode,
+                                          (uint8_t *)hdapcdc.data,
+                                          hdapcdc.CmdLength);
+              hdapcdc.CmdOpCode = 0xFF;
+            }
           }
           break;
 
@@ -493,6 +565,31 @@ uint8_t USBD_DAP_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev)
       }
   }
   return 0;
+}
+
+/**
+  * @brief  USBD_DAP_SendReport 
+  *         Send DAP HID Report
+  * @param  pdev: device instance
+  * @param  buff: pointer to report
+  * @retval status
+  */
+uint8_t USBD_DAP_SendReport     (USBD_HandleTypeDef  *pdev, 
+                                 uint8_t *report,
+                                 uint16_t len)
+{
+  if (pdev->dev_state == USBD_STATE_CONFIGURED )
+  {
+    if(hdapcdc.state == DAP_IDLE)
+    {
+      hdapcdc.state = DAP_BUSY;
+      USBD_LL_Transmit (pdev, 
+                        DAP_EPIN_ADDR,                                      
+                        report,
+                        len);
+    }
+  }
+  return USBD_OK;
 }
 
 /**
