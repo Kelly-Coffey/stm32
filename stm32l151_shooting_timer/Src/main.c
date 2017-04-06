@@ -159,6 +159,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 
   else
+  if (htim->Instance == TIM4) {
+    __HAL_TIM_SET_COUNTER(&htim4, __HAL_TIM_GET_COUNTER(&htim4) + 10000);
+  }
+
+  else
   if (htim->Instance == TIM9) {
     stop_buzzer();
   }
@@ -278,9 +283,6 @@ static bool run(void)
     } while (!update);
 
     uint16_t cnt = __HAL_TIM_GET_COUNTER(&htim4);
-    if (cnt >= 60000) {
-      __HAL_TIM_SET_COUNTER(&htim4, cnt - 50000);
-    }
 
     if (count_num < 1) {
       set_led_blink(cnt, ((cnt % 100) < 50));
