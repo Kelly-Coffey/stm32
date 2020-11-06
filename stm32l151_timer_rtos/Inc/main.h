@@ -55,27 +55,18 @@
 #define OSC_IN_GPIO_Port GPIOH
 #define OSC_OUT_Pin GPIO_PIN_1
 #define OSC_OUT_GPIO_Port GPIOH
-
 #define START_Pin GPIO_PIN_0
 #define START_GPIO_Port GPIOA
 #define DISP_Pin GPIO_PIN_1
 #define DISP_GPIO_Port GPIOA
 #define DELAY_Pin GPIO_PIN_2
 #define DELAY_GPIO_Port GPIOA
-
 #define CA1_Pin GPIO_PIN_0
 #define CA1_GPIO_Port GPIOB
 #define CA2_Pin GPIO_PIN_1
 #define CA2_GPIO_Port GPIOB
 #define CA3_Pin GPIO_PIN_2
 #define CA3_GPIO_Port GPIOB
-#define CA4_Pin GPIO_PIN_3
-#define CA4_GPIO_Port GPIOB
-
-#define D1_Pin GPIO_PIN_8
-#define D1_GPIO_Port GPIOB
-#define D2_Pin GPIO_PIN_9
-#define D2_GPIO_Port GPIOB
 #define D3_Pin GPIO_PIN_10
 #define D3_GPIO_Port GPIOB
 #define D4_Pin GPIO_PIN_11
@@ -88,14 +79,18 @@
 #define D7_GPIO_Port GPIOB
 #define D8_Pin GPIO_PIN_15
 #define D8_GPIO_Port GPIOB
-
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
 #define SWCLK_GPIO_Port GPIOA
-
+#define CA4_Pin GPIO_PIN_3
+#define CA4_GPIO_Port GPIOB
 #define SENSOR_Pin GPIO_PIN_4
 #define SENSOR_GPIO_Port GPIOB
+#define D1_Pin GPIO_PIN_8
+#define D1_GPIO_Port GPIOB
+#define D2_Pin GPIO_PIN_9
+#define D2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
